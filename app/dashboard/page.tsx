@@ -12,11 +12,19 @@ export default async function DashboardPage() {
     redirect('/login');
   }
 
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('display_name, role')
+    .eq('id', userData.user.id)
+    .single();
+
   const { data: sessions } = await supabase
     .from('game_sessions')
     .select('id, status, created_at, current_round, total_score')
     .order('created_at', { ascending: false })
     .limit(5);
+
+  const isAdmin = profile?.role === 'admin';
 
   return (
     <main>
@@ -24,9 +32,10 @@ export default async function DashboardPage() {
       <div className="mx-auto w-[min(1180px,calc(100%-32px))] py-12">
         <section className="rounded-[1.75rem] border border-white/10 bg-white/5 p-6 shadow-glow">
           <h1 className="text-3xl font-extrabold text-white">لوحة اللاعب</h1>
-          <p className="mt-2 text-slate-300">مرحبًا، يمكنك الآن إنشاء جلسة جديدة أو متابعة الجلسات السابقة.</p>
-          <div className="mt-6">
+          <p className="mt-2 text-slate-300">مرحبًا {profile?.display_name ?? 'بك'}، يمكنك الآن إنشاء جلسة جديدة أو متابعة الجلسات السابقة.</p>
+          <div className="mt-6 flex flex-wrap gap-3">
             <CreateSessionButton />
+            {isAdmin && <Link href="/admin" className="rounded-2xl border border-white/10 bg-white/5 px-5 py-3 font-bold text-white">لوحة الأدمن</Link>}
           </div>
         </section>
 
