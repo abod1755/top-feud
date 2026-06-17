@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  @apply bg-bg text-slate-100 antialiased;
+  background:
+    radial-gradient(circle at top right, rgba(78,163,255,.22), transparent 28%),
+    radial-gradient(circle at 20% 10%, rgba(38,224,163,.14), transparent 26%),
+    linear-gradient(180deg, #06101d 0%, #07111f 55%, #050c16 100%);
+}
+
+a {
+  @apply transition-opacity hover:opacity-90;
+}
+
+input,
+button {
+  font: inherit;
+}
+
+::selection {
+  background: rgba(38, 224, 163, 0.24);
+}
