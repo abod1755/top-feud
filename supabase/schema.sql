@@ -3,6 +3,7 @@ create extension if not exists "pgcrypto";
 create table if not exists public.profiles (
   id uuid primary key references auth.users (id) on delete cascade,
   display_name text not null,
+  role text not null default 'player' check (role in ('player', 'admin')),
   created_at timestamptz not null default now()
 );
 
@@ -14,6 +15,27 @@ create table if not exists public.game_sessions (
   total_score integer not null default 0,
   created_at timestamptz not null default now()
 );
+
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer set search_path = public
+as $$
+begin
+  insert into public.profiles (id, display_name, role)
+  values (
+    new.id,
+    coalesce(new.raw_user_meta_data->>'display_name', split_part(new.email, '@', 1)),
+    'player'
+  )
+  on conflict (id) do nothing;
+  return new;
+end;
+$$;
+
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute procedure public.handle_new_user();
 
 alter table public.profiles enable row level security;
 alter table public.game_sessions enable row level security;
