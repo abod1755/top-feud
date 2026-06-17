@@ -18,21 +18,31 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
     setLoading(true);
     setError(null);
 
-    const payload =
-      mode === 'register'
-        ? { email, password, options: { data: { display_name: displayName } } }
-        : { email, password };
+    if (mode === 'register') {
+      const { error: registerError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { data: { display_name: displayName } },
+      });
 
-    const result =
-      mode === 'register'
-        ? await supabase.auth.signUp(payload)
-        : await supabase.auth.signInWithPassword(payload);
+      setLoading(false);
 
-    setLoading(false);
+      if (registerError) {
+        setError(registerError.message);
+        return;
+      }
+    } else {
+      const { error: loginError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    if (result.error) {
-      setError(result.error.message);
-      return;
+      setLoading(false);
+
+      if (loginError) {
+        setError(loginError.message);
+        return;
+      }
     }
 
     router.push('/dashboard');
