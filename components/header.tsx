@@ -15,6 +15,7 @@ export function Header() {
           <Link href="/tournaments">الجولات</Link>
           <Link href="/leaderboard">لوحة النقاط</Link>
           <Link href="/dashboard">لوحة اللاعب</Link>
+          <Link href="/admin">الأدمن</Link>
         </nav>
       </div>
     </header>
