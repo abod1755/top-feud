@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Top Feud | لعبة المسابقات العائلية</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <div class="nav">
+        <a class="brand" href="index.html">
+          <div class="mark">F</div>
+          <div><strong>Top Feud</strong><span>لعبة العائلة والأسئلة السريعة</span></div>
+        </a>
+        <nav aria-label="Primary">
+          <ul>
+            <li><a href="tournaments.html">الجولات</a></li>
+            <li><a href="leaderboard.html">لوحة النقاط</a></li>
+            <li><a href="tournament.html">تفاصيل الجولة</a></li>
+          </ul>
+        </nav>
+        <div class="nav-actions">
+          <a class="nav-link" href="#login">تسجيل الدخول</a>
+          <a class="nav-cta" href="#register">إنشاء حساب</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap page active" id="home">
+    <section class="hero">
+      <div>
+        <div class="kicker"><span class="dot"></span> نفس روح Family Feud لكن بتجربة عربية أصلية</div>
+        <h1>اسأل السؤال، اكشف الإجابات، وخذ النقاط قبل الفريق الثاني.</h1>
+        <p class="lead">
+          مشروع ترفيهي كامل مبني كعرض مسابقات عائلي: سؤال على اللوحة، إجابات مخفية، نقاط لكل إجابة،
+          وتنافس بين فريقين أو أكثر داخل نفس الجلسة.
+        </p>
+        <div class="actions">
+          <a class="btn btn-primary" href="tournament.html">شاهد لوحة السؤال</a>
+          <a class="btn btn-secondary" href="leaderboard.html">عرض النتائج</a>
+        </div>
+        <div class="auth-card" id="login">
+          <h3>دخول سريع للزوار العائدين</h3>
+          <p>حسابك يسمح لك بحفظ النقاط، متابعة الفرق، وإكمال اللعب من نفس الجلسة عند نشر المشروع للعامة.</p>
+          <div class="auth-actions">
+            <a class="btn btn-primary" href="login.html">تسجيل الدخول</a>
+            <a class="btn btn-secondary" href="register.html" id="register">إنشاء حساب</a>
+          </div>
+        </div>
+        <div class="stats">
+          <div class="stat"><strong>6</strong><span>جولات في الحلقة</span></div>
+          <div class="stat"><strong>100</strong><span>نقطة عند الفوز بالجولة</span></div>
+          <div class="stat"><strong>2</strong><span>فرق متنافسة</span></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-top">
+          <div><strong style="display:block;font-size:1.1rem">لوحة السؤال</strong><span style="color:var(--muted)">الإجابات مخفية حتى يتم كشفها</span></div>
+          <div class="pill">الجولة 3</div>
+        </div>
+        <div class="preview">
+          <div class="card-stack">
+            <div class="mini-card"><div><b>ما الشيء الذي لا يغادر البيت بدونه الناس؟</b><small>أجب بسرعة قبل الفريق الآخر</small></div><div class="badge">سؤال</div></div>
+            <div class="mini-card"><div><b>الإجابة 1</b><small>**********</small></div><div class="badge" style="background:rgba(255,209,102,.13);color:#ffe6a0">25 نقطة</div></div>
+            <div class="mini-card"><div><b>الإجابة 2</b><small>********</small></div><div class="badge" style="background:rgba(78,163,255,.12);color:#c9e2ff">18 نقطة</div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <div><h2>كيف يلعب?</h2><p>تجربة واضحة وسريعة: سؤال، إجابات شائعة، وكشف تدريجي مثل العرض التلفزيوني الشهير.</p></div>
+      </div>
+      <div class="grid-3">
+        <article class="feature"><div class="icon">🎤</div><h3>مقدم اللعبة</h3><p>يعرض السؤال، يدير الجولة، ويكشف الإجابات واحدة تلو الأخرى.</p></article>
+        <article class="feature"><div class="icon">🧠</div><h3>إجابات شائعة</h3><p>كل سؤال مبني على أكثر الإجابات انتشارًا عند الناس، وليس إجابة واحدة صحيحة.</p></article>
+        <article class="feature"><div class="icon">🏁</div><h3>فريقان</h3><p>الفريق الذي يقرأ الجمهور أفضل ويستغل الفرص يحصل على النقاط الأعلى.</p></article>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <div><h2>ماذا يتضمن المشروع؟</h2><p>هيكل جاهز يقدّم عرض المسابقة، صفحات الجولات، لوحة النقاط، وصفحة تفاصيل الجولة.</p></div>
+      </div>
+      <div class="steps">
+        <article class="step"><div class="step-num">1</div><h3>لوحة السؤال</h3><p>صفحة رئيسية فيها سؤال كبير وإجابات مخفية قابلة للكشف.</p></article>
+        <article class="step"><div class="step-num">2</div><h3>صفحات الجولات</h3><p>عرض الجولة الحالية، عدد المحاولات، وحالة الفريقين.</p></article>
+        <article class="step"><div class="step-num">3</div><h3>لوحة النقاط</h3><p>ترتيب الفرق واللاعبين حسب النقاط والفوز المتراكم.</p></article>
+        <article class="step"><div class="step-num">4</div><h3>تفاصيل الجولة</h3><p>صفحة لكل سؤال تحتوي على الإجابات الصحيحة وقيمتها.</p></article>
+      </div>
+    </section>
+
+    <section class="promo">
+      <div>
+        <h3>إذا تبي، أقدر أحوّله الآن إلى لعبة فعلية أكثر.</h3>
+        <p>مثلاً: زر يكشف الإجابة، عداد نقاط، مؤقت، فرق، وأزرار تحكم للمقدم.</p>
+      </div>
+      <a class="btn btn-primary" href="tournament.html">ابدأ من لوحة السؤال</a>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <div class="footer-row">
+        <div><strong style="color:var(--text)">Top Feud</strong><br /><span>تجربة أصلية مستوحاة من Family Feud.</span></div>
+        <div>مهيأ للتوسعة إلى لعبة تفاعلية كاملة.</div>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>
