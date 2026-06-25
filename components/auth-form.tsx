@@ -20,7 +20,7 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
     const supabase = createSupabaseBrowserClient();
 
     if (mode === 'register') {
-      const { error: registerError } = await supabase.auth.signUp({
+      const { data, error: registerError } = await supabase.auth.signUp({
         email,
         password,
         options: { data: { display_name: displayName } },
@@ -30,6 +30,11 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
 
       if (registerError) {
         setError(registerError.message);
+        return;
+      }
+
+      if (!data.session) {
+        setError('تم إنشاء الحساب، لكن Supabase يطلب تأكيد البريد الإلكتروني. افتح بريدك واضغط رابط التفعيل ثم سجّل دخولك من جديد.');
         return;
       }
     } else {
