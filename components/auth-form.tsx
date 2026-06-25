@@ -16,43 +16,44 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
     setLoading(true);
     setError(null);
 
-    const { createSupabaseBrowserClient } = await import('@/lib/supabase/browser');
-    const supabase = createSupabaseBrowserClient();
+    try {
+      const { createSupabaseBrowserClient } = await import('@/lib/supabase/browser');
+      const supabase = createSupabaseBrowserClient();
 
-    if (mode === 'register') {
-      const { data, error: registerError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: { data: { display_name: displayName } },
-      });
+      if (mode === 'register') {
+        const { data, error: registerError } = await supabase.auth.signUp({
+          email,
+          password,
+          options: { data: { display_name: displayName } },
+        });
 
+        if (registerError) {
+          throw registerError;
+        }
+
+        if (!data.session) {
+          setError('تم إنشاء الحساب، لكن Supabase يطلب تأكيد البريد الإلكتروني. افتح بريدك واضغط رابط التفعيل ثم سجّل دخولك من جديد.');
+          return;
+        }
+      } else {
+        const { error: loginError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (loginError) {
+          throw loginError;
+        }
+      }
+
+      router.push('/dashboard');
+      router.refresh();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'حدث خطأ غير متوقع أثناء التسجيل';
+      setError(message);
+    } finally {
       setLoading(false);
-
-      if (registerError) {
-        setError(registerError.message);
-        return;
-      }
-
-      if (!data.session) {
-        setError('تم إنشاء الحساب، لكن Supabase يطلب تأكيد البريد الإلكتروني. افتح بريدك واضغط رابط التفعيل ثم سجّل دخولك من جديد.');
-        return;
-      }
-    } else {
-      const { error: loginError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      setLoading(false);
-
-      if (loginError) {
-        setError(loginError.message);
-        return;
-      }
     }
-
-    router.push('/dashboard');
-    router.refresh();
   }
 
   return (
