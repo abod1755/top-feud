@@ -19,6 +19,7 @@ Copy `.env.example` to `.env.local` and fill in:
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
+ADMIN_EMAIL=
 ```
 
 ## Supabase setup
@@ -26,8 +27,10 @@ SUPABASE_SERVICE_ROLE_KEY=
 1. Create a Supabase project.
 2. Run `supabase/schema.sql` in the SQL editor.
 3. Enable email/password auth.
-4. Set one profile's `role` to `admin` in the `profiles` table for the admin account.
-5. Add the auth redirect URLs for your deployment domain.
+4. If you want instant sign-up without email verification, disable email confirmations in Supabase Auth settings.
+5. Set one profile's `role` to `admin` in the `profiles` table for the admin account.
+6. Set `ADMIN_EMAIL` to your email in Vercel and locally.
+7. Add the auth redirect URLs for your deployment domain.
 
 ## Run locally
 
@@ -41,4 +44,4 @@ npm run dev
 - Users must sign in before creating a game session.
 - Each session is stored in `public.game_sessions`.
 - RLS policies limit session access to the owner.
-- Admin features are protected by the `profiles.role` field.
+- Admin features are protected by the `profiles.role` field and `ADMIN_EMAIL`.
