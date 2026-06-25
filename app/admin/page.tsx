@@ -2,12 +2,18 @@ import { redirect } from 'next/navigation';
 import { Header } from '@/components/header';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? 'smsm17555@gmail.com';
+
 export default async function AdminPage() {
   const supabase = createSupabaseServerClient();
   const { data: userData } = await supabase.auth.getUser();
 
   if (!userData.user) {
     redirect('/login');
+  }
+
+  if (userData.user.email !== ADMIN_EMAIL) {
+    redirect('/dashboard');
   }
 
   const { data: profile } = await supabase
