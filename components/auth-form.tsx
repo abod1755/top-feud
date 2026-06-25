@@ -2,11 +2,9 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
 
 export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
   const router = useRouter();
-  const supabase = createSupabaseBrowserClient();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
@@ -17,6 +15,9 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
     e.preventDefault();
     setLoading(true);
     setError(null);
+
+    const { createSupabaseBrowserClient } = await import('@/lib/supabase/browser');
+    const supabase = createSupabaseBrowserClient();
 
     if (mode === 'register') {
       const { error: registerError } = await supabase.auth.signUp({
