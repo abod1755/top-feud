@@ -1,5 +1,6 @@
 import Link from 'next/link';
 
+import { signOutAction } from '@/app/actions/auth';
 import { Button } from '@/components/ui/button';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 
@@ -50,9 +51,16 @@ export async function Header() {
 
         <div className="flex items-center gap-2">
           {user ? (
-            <Button asChild variant="outline" size="sm">
-              <Link href="/dashboard">{displayName}</Link>
-            </Button>
+            <>
+              <Button asChild variant="outline" size="sm">
+                <Link href="/dashboard">{displayName}</Link>
+              </Button>
+              <form action={signOutAction}>
+                <Button type="submit" variant="ghost" size="sm">
+                  خروج
+                </Button>
+              </form>
+            </>
           ) : (
             <>
               <Button asChild variant="ghost" size="sm">
