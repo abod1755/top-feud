@@ -9,7 +9,32 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [loading, setLoading] = useState(false);
+  const [oauthLoading, setOauthLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  async function handleGoogleSignIn() {
+    setOauthLoading(true);
+    setError(null);
+
+    try {
+      const { createSupabaseBrowserClient } = await import('@/lib/supabase/browser');
+      const supabase = createSupabaseBrowserClient();
+      const { error: oauthError } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin + '/auth/callback?next=/dashboard',
+        },
+      });
+
+      if (oauthError) {
+        throw oauthError;
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'حدث خطأ غير متوقع أثناء تسجيل الدخول عبر Google';
+      setError(message);
+      setOauthLoading(false);
+    }
+  }
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -100,10 +125,25 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
       {error && <p className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">{error}</p>}
 
       <button
-        disabled={loading}
+        disabled={loading || oauthLoading}
         className="w-full rounded-2xl bg-gradient-to-l from-accent to-[#6df0c4] px-4 py-3 font-bold text-slate-950 transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
       >
         {loading ? 'جارٍ التنفيذ...' : mode === 'login' ? 'تسجيل الدخول' : 'إنشاء الحساب'}
+      </button>
+
+      <div className="flex items-center gap-3 text-sm text-slate-400">
+        <span className="h-px flex-1 bg-white/10" />
+        <span>أو</span>
+        <span className="h-px flex-1 bg-white/10" />
+      </div>
+
+      <button
+        type="button"
+        onClick={handleGoogleSignIn}
+        disabled={loading || oauthLoading}
+        className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 font-bold text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        {oauthLoading ? 'جارٍ فتح Google...' : 'التسجيل بواسطة Gmail'}
       </button>
     </form>
   );
