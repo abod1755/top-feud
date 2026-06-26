@@ -11,6 +11,12 @@ Arabic Family Feud-style game built with Next.js and Supabase.
 - Session detail page
 - Supabase RLS schema
 
+## Production roadmap
+
+The long-term production plan, target architecture, ER diagram, milestones, and immediate TODO list live in:
+
+- [`docs/production-roadmap.md`](docs/production-roadmap.md)
+
 ## Environment variables
 
 Copy `.env.example` to `.env.local` and fill in:
