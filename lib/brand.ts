@@ -1,0 +1,22 @@
+/** Central brand constants for the platform. */
+export const BRAND = {
+  name: 'لمّة',
+  latin: 'Lamma',
+  tagline: 'منصة ألعابكم الجماعية',
+  description:
+    'لمّة — منصة عربية لاكتشاف وإنشاء ولعب الألعاب الجماعية: فاميلي فيود، سباق الحروف، والمزيد. مع وضع العرض على التلفاز، لوحات الصدارة، ومجتمع صُنّاع.',
+} as const;
+
+/** Human label + emoji per game type, used across the UI. */
+export const GAME_TYPES = {
+  family_feud: { label: 'فاميلي فيود', short: 'فيود', emoji: '👨‍👩‍👧‍👦' },
+  word_builder: { label: 'سباق الحروف', short: 'حروف', emoji: '🔤' },
+} as const;
+
+export type GameTypeKey = keyof typeof GAME_TYPES;
+
+export const DIFFICULTY_LABELS: Record<string, string> = {
+  easy: 'سهل',
+  medium: 'متوسط',
+  hard: 'صعب',
+};

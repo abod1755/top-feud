@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Cairo, Inter } from 'next/font/google';
 
 import './globals.css';
+import { BRAND } from '@/lib/brand';
 import { siteUrl } from '@/lib/env';
 import { cn } from '@/lib/utils';
 
@@ -21,26 +22,25 @@ const fontDisplay = Cairo({
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: 'Top Feud — منصة ألعاب فاميلي فيود',
-    template: '%s · Top Feud',
+    default: `${BRAND.name} — ${BRAND.tagline}`,
+    template: `%s · ${BRAND.name}`,
   },
-  description:
-    'اكتشف، أنشئ، والعب أفضل ألعاب فاميلي فيود العربية. منصة احترافية لصُنّاع المحتوى واللاعبين مع وضع العرض على التلفاز، لوحات الصدارة، والمجتمع.',
-  keywords: ['Family Feud', 'فاميلي فيود', 'ألعاب عائلية', 'مسابقات', 'Top Feud', 'العاب جماعية'],
-  authors: [{ name: 'Top Feud' }],
-  applicationName: 'Top Feud',
+  description: BRAND.description,
+  keywords: ['لمّة', 'Lamma', 'ألعاب جماعية', 'فاميلي فيود', 'سباق الحروف', 'ألعاب عائلية', 'مسابقات'],
+  authors: [{ name: BRAND.name }],
+  applicationName: BRAND.name,
   openGraph: {
     type: 'website',
     locale: 'ar_SA',
-    siteName: 'Top Feud',
-    title: 'Top Feud — منصة ألعاب فاميلي فيود',
-    description: 'اكتشف، أنشئ، والعب أفضل ألعاب فاميلي فيود العربية.',
+    siteName: BRAND.name,
+    title: `${BRAND.name} — ${BRAND.tagline}`,
+    description: BRAND.description,
     url: siteUrl,
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Top Feud',
-    description: 'اكتشف، أنشئ، والعب أفضل ألعاب فاميلي فيود العربية.',
+    title: BRAND.name,
+    description: BRAND.tagline,
   },
   robots: {
     index: true,
