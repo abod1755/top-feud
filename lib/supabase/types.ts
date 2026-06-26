@@ -535,6 +535,7 @@ export interface Database {
           bio: string | null;
           avatar_url: string | null;
           banner_url: string | null;
+          gender: Database['public']['Enums']['gender'] | null;
           role: Database['public']['Enums']['user_role'];
           location: string | null;
           website: string | null;
@@ -552,6 +553,7 @@ export interface Database {
           bio?: string | null;
           avatar_url?: string | null;
           banner_url?: string | null;
+          gender?: Database['public']['Enums']['gender'] | null;
           role?: Database['public']['Enums']['user_role'];
           location?: string | null;
           website?: string | null;
@@ -569,6 +571,7 @@ export interface Database {
           bio?: string | null;
           avatar_url?: string | null;
           banner_url?: string | null;
+          gender?: Database['public']['Enums']['gender'] | null;
           role?: Database['public']['Enums']['user_role'];
           location?: string | null;
           website?: string | null;
@@ -829,6 +832,7 @@ export interface Database {
       report_target: 'game' | 'comment' | 'profile';
       session_status: 'lobby' | 'active' | 'paused' | 'finished' | 'abandoned';
       user_role: 'player' | 'creator' | 'moderator' | 'admin';
+      gender: 'male' | 'female';
     };
     CompositeTypes: Record<string, never>;
   };

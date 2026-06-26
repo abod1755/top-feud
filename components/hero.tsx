@@ -1,40 +1,70 @@
 import Link from 'next/link';
 
-export function Hero() {
+import { Button } from '@/components/ui/button';
+import { createSupabaseServerClient } from '@/lib/supabase/server';
+
+export async function Hero() {
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   return (
     <section className="grid gap-8 py-16 lg:grid-cols-[1.1fr_.9fr] lg:items-center">
       <div>
-        <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-300">
-          <span className="h-2 w-2 rounded-full bg-accent shadow-[0_0_18px_#26e0a3]" />
-          نفس روح Family Feud لكن بتجربة عربية أصلية
+        <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-4 py-2 text-sm text-muted-foreground">
+          <span className="h-2 w-2 rounded-full bg-primary shadow-glow-primary" />
+          نفس روح Family Feud بتجربة عربية أصلية
         </div>
-        <h1 className="mt-5 text-4xl font-extrabold leading-[1.05] tracking-tight text-white md:text-6xl">
+        <h1 className="mt-5 font-display text-4xl font-extrabold leading-[1.05] tracking-tight md:text-6xl">
           اسأل السؤال، اكشف الإجابات، وخذ النقاط قبل الفريق الثاني.
         </h1>
-        <p className="mt-4 max-w-2xl text-lg leading-8 text-slate-300">
-          منصة ترفيهية متعددة اللاعبين تعتمد على تسجيل الدخول، الجلسات المحفوظة، وقاعدة بيانات فعلية للجولات والنقاط.
+        <p className="mt-4 max-w-2xl text-lg leading-8 text-muted-foreground">
+          منصة لاكتشاف وإنشاء ولعب ألعاب فاميلي فيود — مع وضع عرض على التلفاز، لوحات صدارة، ومجتمع صُنّاع.
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
-          <Link href="/register" className="rounded-2xl bg-gradient-to-l from-accent to-[#6df0c4] px-5 py-3 font-bold text-slate-950">ابدأ بحسابك</Link>
-          <Link href="/login" className="rounded-2xl border border-white/10 bg-white/5 px-5 py-3 font-bold text-white">تسجيل الدخول</Link>
+          {user ? (
+            <>
+              <Button asChild variant="gradient" size="lg">
+                <Link href="/dashboard">اذهب إلى لوحتك</Link>
+              </Button>
+              <Button asChild variant="outline" size="lg">
+                <Link href="/explore">تصفّح الألعاب</Link>
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button asChild variant="gradient" size="lg">
+                <Link href="/register">ابدأ مجانًا</Link>
+              </Button>
+              <Button asChild variant="outline" size="lg">
+                <Link href="/login">تسجيل الدخول</Link>
+              </Button>
+            </>
+          )}
         </div>
       </div>
-      <div className="rounded-[1.75rem] border border-white/10 bg-white/5 p-6 shadow-glow backdrop-blur">
-        <div className="rounded-[1.5rem] border border-white/10 bg-slate-950/40 p-5">
+
+      <div className="glass rounded-2xl p-6 shadow-glow">
+        <div className="rounded-xl border border-border bg-background/40 p-5">
           <div className="flex items-center justify-between">
             <div>
               <strong className="block text-lg">لوحة السؤال</strong>
-              <span className="text-sm text-slate-400">الإجابات مخفية حتى يتم كشفها</span>
+              <span className="text-sm text-muted-foreground">الإجابات مخفية حتى يتم كشفها</span>
             </div>
-            <div className="rounded-full bg-white/5 px-3 py-1 text-xs text-slate-300">الجولة 3</div>
+            <div className="rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground">الجولة 3</div>
           </div>
           <div className="mt-5 space-y-3">
-            <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-              <div className="text-sm text-slate-300">ما الشيء الذي لا يغادر البيت بدونه الناس؟</div>
-              <div className="mt-2 text-xs text-accent">سؤال سريع قبل الفريق الآخر</div>
+            <div className="rounded-xl border border-border bg-background/40 p-4">
+              <div className="text-sm">ما الشيء الذي لا يخرج الناس من البيت بدونه؟</div>
+              <div className="mt-2 text-xs text-primary">سؤال سريع قبل الفريق الآخر</div>
             </div>
-            <div className="rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-slate-400">********** 25 نقطة</div>
-            <div className="rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-slate-400">******** 18 نقطة</div>
+            <div className="rounded-xl border border-border bg-background/40 p-4 text-sm text-muted-foreground">
+              ●●●●●●●●  ٤٢ نقطة
+            </div>
+            <div className="rounded-xl border border-border bg-background/40 p-4 text-sm text-muted-foreground">
+              ●●●●●●  ٢٥ نقطة
+            </div>
           </div>
         </div>
       </div>
