@@ -119,10 +119,10 @@ export default async function GameDetailPage({ params }: { params: Promise<{ slu
             )}
 
             <Button asChild variant="gradient" size="lg" className="mt-4 w-full">
-              <Link href={`/dashboard?play=${game.slug}`}>استضف جلسة لعب</Link>
+              <Link href={`/play/${game.slug}`}>العب الآن</Link>
             </Button>
             <p className="mt-3 text-center text-xs text-muted-foreground">
-              تجربة اللعب الكاملة (المؤقّت، الأجراس، العرض على التلفاز) تُبنى في المرحلة القادمة.
+              لعب فردي متاح الآن — وضع المضيف والعرض على التلفاز قريبًا.
             </p>
           </aside>
         </div>

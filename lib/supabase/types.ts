@@ -819,7 +819,9 @@ export interface Database {
       };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      increment_play_count: { Args: { gid: string }; Returns: undefined };
+    };
     Enums: {
       collaborator_role: 'viewer' | 'editor' | 'owner';
       difficulty: 'easy' | 'medium' | 'hard';
