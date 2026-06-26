@@ -24,11 +24,14 @@
     --popover: 222 47% 7%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 158 78% 51%; /* Top Feud emerald */
+    --primary: 176 76% 49%; /* لمّة cyan */
     --primary-foreground: 222 47% 6%;
 
     --secondary: 214 100% 65%; /* electric blue accent */
     --secondary-foreground: 222 47% 6%;
+
+    --brand-yellow: 46 100% 55%;
+    --brand-pink: 330 90% 58%;
 
     --muted: 217 33% 14%;
     --muted-foreground: 215 20% 65%;
@@ -44,7 +47,7 @@
 
     --border: 215 28% 20%;
     --input: 215 28% 18%;
-    --ring: 158 78% 51%;
+    --ring: 176 76% 49%;
 
     --radius: 0.9rem;
   }
@@ -117,5 +120,25 @@
   }
   .skeleton::after {
     @apply absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/10 to-transparent content-[''];
+  }
+
+  /*
+   * Playful "sticker" wordmark: a thick white outline behind a colored fill
+   * plus a chunky drop shadow — the 10top.gg / arcade look. `paint-order`
+   * keeps the fill crisply on top of the stroke.
+   */
+  .text-sticker {
+    color: hsl(var(--primary));
+    -webkit-text-stroke: 0.14em #fff;
+    paint-order: stroke fill;
+    text-shadow:
+      0 0.06em 0 rgba(0, 0, 0, 0.35),
+      0 0.14em 0.3em rgba(0, 0, 0, 0.45);
+    letter-spacing: -0.02em;
+  }
+
+  /* Pressable, chunky pill button with a hard bottom shadow. */
+  .btn-chunky {
+    @apply rounded-full font-extrabold text-[#06141a] shadow-[0_5px_0_rgba(0,0,0,0.35)] transition-transform active:translate-y-0.5 active:shadow-[0_2px_0_rgba(0,0,0,0.35)];
   }
 }
