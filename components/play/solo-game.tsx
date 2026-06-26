@@ -3,11 +3,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Heart, Timer, RotateCcw, ArrowLeft, Check, X } from 'lucide-react';
+import { Heart, Timer, RotateCcw, ArrowLeft, Check, X, Volume2, VolumeX } from 'lucide-react';
 
 import { recordPlay } from '@/app/actions/play';
 import { Button } from '@/components/ui/button';
 import { findAnswerIndex } from '@/lib/match';
+import { playCorrect, playWrong, playFinish } from '@/lib/sounds';
 import { cn, formatNumber } from '@/lib/utils';
 
 export interface PlayAnswer {
@@ -39,6 +40,19 @@ export function SoloGame({ gameId, gameSlug, gameTitle, questions }: SoloGamePro
   const [input, setInput] = useState('');
   const [flash, setFlash] = useState<'correct' | 'wrong' | null>(null);
   const [gain, setGain] = useState<number | null>(null);
+  const [muted, setMuted] = useState(false);
+
+  const mutedRef = useRef(false);
+  const toggleMute = () =>
+    setMuted((m) => {
+      mutedRef.current = !m;
+      return !m;
+    });
+  const sfx = {
+    correct: () => !mutedRef.current && playCorrect(),
+    wrong: () => !mutedRef.current && playWrong(),
+    finish: () => !mutedRef.current && playFinish(),
+  };
 
   const question = questions[qIndex];
   const [timeLeft, setTimeLeft] = useState(question?.timeLimit ?? 60);
@@ -46,20 +60,21 @@ export function SoloGame({ gameId, gameSlug, gameTitle, questions }: SoloGamePro
 
   const endQuestion = useCallback(() => {
     setPhase('between');
-    setRevealed(new Set(question.answers.map((_, i) => i))); // reveal all (incl. missed)
+    setRevealed(new Set(question.answers.map((_, i) => i)));
     betweenTimer.current = setTimeout(() => {
       setQIndex((prev) => {
         if (prev + 1 >= questions.length) {
           setPhase('finished');
+          sfx.finish();
           void recordPlay(gameId);
           return prev;
         }
         return prev + 1;
       });
     }, BETWEEN_MS);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [question, questions.length, gameId]);
 
-  // Reset per-question state when the question changes.
   useEffect(() => {
     if (!question) return;
     setRevealed(new Set());
@@ -69,7 +84,6 @@ export function SoloGame({ gameId, gameSlug, gameTitle, questions }: SoloGamePro
     setInput('');
   }, [question]);
 
-  // Countdown.
   useEffect(() => {
     if (phase !== 'playing') return;
     if (timeLeft <= 0) {
@@ -105,12 +119,14 @@ export function SoloGame({ gameId, gameSlug, gameTitle, questions }: SoloGamePro
       const pts = question.answers[idx].points;
       setScore((s) => s + pts);
       flashFeedback('correct', pts);
+      sfx.correct();
       if (next.size === question.answers.length) {
         if (betweenTimer.current) clearTimeout(betweenTimer.current);
         setTimeout(endQuestion, 600);
       }
     } else {
       flashFeedback('wrong');
+      sfx.wrong();
       setLives((l) => {
         const remaining = l - 1;
         if (remaining <= 0) setTimeout(endQuestion, 400);
@@ -169,7 +185,6 @@ export function SoloGame({ gameId, gameSlug, gameTitle, questions }: SoloGamePro
 
   return (
     <div className="container max-w-3xl py-6">
-      {/* top bar */}
       <div className="flex items-center justify-between">
         <Link href={`/games/${gameSlug}`} className="text-muted-foreground hover:text-foreground" aria-label="خروج">
           <X className="size-6" />
@@ -177,31 +192,39 @@ export function SoloGame({ gameId, gameSlug, gameTitle, questions }: SoloGamePro
         <span className="text-sm font-semibold text-muted-foreground">
           سؤال {qIndex + 1} / {questions.length}
         </span>
-        <span className="w-6" />
+        <button
+          type="button"
+          onClick={toggleMute}
+          className="text-muted-foreground hover:text-foreground"
+          aria-label={muted ? 'تشغيل الصوت' : 'كتم الصوت'}
+        >
+          {muted ? <VolumeX className="size-5" /> : <Volume2 className="size-5" />}
+        </button>
       </div>
 
-      {/* question banner */}
       <div className="mt-4 rounded-2xl border-2 border-primary/60 bg-card/70 p-4 text-center font-display text-lg font-bold shadow-glow">
         {question.prompt}
       </div>
 
-      {/* input + status */}
       <div className="mt-5 grid grid-cols-[1fr_auto] gap-3">
-        <form onSubmit={submitGuess}>
-          <input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            disabled={phase !== 'playing'}
-            placeholder="اكتب إجابتك هنا…"
-            autoFocus
-            className={cn(
-              'h-full w-full rounded-2xl border-2 bg-background/60 px-5 text-center text-lg font-semibold outline-none transition',
-              flash === 'correct' && 'border-primary',
-              flash === 'wrong' && 'border-destructive',
-              !flash && 'border-border focus:border-primary',
-            )}
-          />
-        </form>
+        <motion.div animate={flash === 'wrong' ? { x: [0, -9, 9, -7, 7, 0] } : { x: 0 }} transition={{ duration: 0.4 }}>
+          <form onSubmit={submitGuess} className="h-full">
+            <input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              disabled={phase !== 'playing'}
+              placeholder="اكتب إجابتك هنا…"
+              autoFocus
+              className={cn(
+                'h-full w-full rounded-2xl border-2 px-5 text-center text-lg font-semibold outline-none transition-colors',
+                flash === 'correct' && 'border-success bg-success/10 ring-2 ring-success/40',
+                flash === 'wrong' && 'border-destructive bg-destructive/10 ring-2 ring-destructive/40',
+                !flash && 'border-border bg-background/60 focus:border-primary',
+              )}
+            />
+          </form>
+        </motion.div>
+
         <div className="relative grid place-items-center rounded-2xl border-2 border-border bg-card/70 px-5 py-3">
           <div className="flex items-center gap-1 text-xs text-muted-foreground">
             <Timer className="size-3.5" /> {timeLeft}s
@@ -221,7 +244,7 @@ export function SoloGame({ gameId, gameSlug, gameTitle, questions }: SoloGamePro
                 initial={{ opacity: 0, y: 0 }}
                 animate={{ opacity: 1, y: -24 }}
                 exit={{ opacity: 0 }}
-                className="absolute -top-2 font-extrabold text-primary"
+                className="absolute -top-2 font-extrabold text-success"
               >
                 +{gain}
               </motion.div>
@@ -230,7 +253,6 @@ export function SoloGame({ gameId, gameSlug, gameTitle, questions }: SoloGamePro
         </div>
       </div>
 
-      {/* board */}
       <div className="mt-6 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
         {answers.map((answer, i) => {
           const isRevealed = revealed.has(i);
@@ -239,8 +261,8 @@ export function SoloGame({ gameId, gameSlug, gameTitle, questions }: SoloGamePro
               key={i}
               layout
               className={cn(
-                'flex items-center gap-3 rounded-xl border px-3 py-3 text-sm',
-                isRevealed ? 'border-primary/40 bg-primary/10' : 'border-border bg-card/50',
+                'flex items-center gap-3 rounded-xl border px-3 py-3 text-sm transition-colors',
+                isRevealed ? 'border-success/50 bg-success/10' : 'border-border bg-card/50',
               )}
             >
               <span className="grid size-7 shrink-0 place-items-center rounded-md bg-muted text-xs font-bold text-muted-foreground">
@@ -253,10 +275,10 @@ export function SoloGame({ gameId, gameSlug, gameTitle, questions }: SoloGamePro
                   className="flex w-full items-center justify-between font-semibold"
                 >
                   <span className="inline-flex items-center gap-1.5">
-                    <Check className="size-4 text-primary" />
+                    <Check className="size-4 text-success" />
                     {answer.text}
                   </span>
-                  <span className="text-primary">{answer.points}</span>
+                  <span className="text-success">{answer.points}</span>
                 </motion.span>
               ) : (
                 <span className="h-2 w-full rounded-full bg-muted" />
