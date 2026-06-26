@@ -271,6 +271,30 @@ export interface Database {
         };
         Relationships: [];
       };
+      game_scores: {
+        Row: {
+          user_id: string;
+          game_id: string;
+          best_score: number;
+          plays: number;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          game_id: string;
+          best_score?: number;
+          plays?: number;
+          updated_at?: string;
+        };
+        Update: {
+          user_id?: string;
+          game_id?: string;
+          best_score?: number;
+          plays?: number;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       game_sessions: {
         Row: {
           id: string;

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Heart, Timer, RotateCcw, ArrowLeft, Check, X, Volume2, VolumeX } from 'lucide-react';
 
-import { recordPlay } from '@/app/actions/play';
+import { recordPlay, recordScore } from '@/app/actions/play';
 import { Button } from '@/components/ui/button';
 import { findAnswerIndex } from '@/lib/match';
 import { playCorrect, playWrong, playFinish } from '@/lib/sounds';
@@ -57,6 +57,7 @@ export function SoloGame({ gameId, gameSlug, gameTitle, questions }: SoloGamePro
   const question = questions[qIndex];
   const [timeLeft, setTimeLeft] = useState(question?.timeLimit ?? 60);
   const betweenTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const scoreRef = useRef(0);
 
   const endQuestion = useCallback(() => {
     setPhase('between');
@@ -67,6 +68,7 @@ export function SoloGame({ gameId, gameSlug, gameTitle, questions }: SoloGamePro
           setPhase('finished');
           sfx.finish();
           void recordPlay(gameId);
+          void recordScore(gameId, scoreRef.current);
           return prev;
         }
         return prev + 1;
@@ -117,7 +119,11 @@ export function SoloGame({ gameId, gameSlug, gameTitle, questions }: SoloGamePro
       next.add(idx);
       setRevealed(next);
       const pts = question.answers[idx].points;
-      setScore((s) => s + pts);
+      setScore((s) => {
+        const ns = s + pts;
+        scoreRef.current = ns;
+        return ns;
+      });
       flashFeedback('correct', pts);
       sfx.correct();
       if (next.size === question.answers.length) {
@@ -138,6 +144,7 @@ export function SoloGame({ gameId, gameSlug, gameTitle, questions }: SoloGamePro
   function restart() {
     if (betweenTimer.current) clearTimeout(betweenTimer.current);
     setScore(0);
+    scoreRef.current = 0;
     setQIndex(0);
     setRevealed(new Set());
     setLives(MAX_LIVES);
