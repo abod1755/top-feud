@@ -48,13 +48,34 @@ export function playCorrect() {
   tone(ctx, 988, t + 0.1, 0.18, 'sine', 0.2); // B5
 }
 
-/** Low buzzer for a wrong answer. */
+// User-provided "wrong answer" clips (served from /public/sounds).
+const WRONG_SOUNDS = ['/sounds/wrong1.m4a', '/sounds/wrong2.m4a'];
+let wrongAudios: HTMLAudioElement[] | null = null;
+
+function wrongPool(): HTMLAudioElement[] {
+  if (typeof window === 'undefined') return [];
+  if (!wrongAudios) {
+    wrongAudios = WRONG_SOUNDS.map((src) => {
+      const a = new Audio(src);
+      a.preload = 'auto';
+      a.volume = 0.85;
+      return a;
+    });
+  }
+  return wrongAudios;
+}
+
+/** Plays one of the uploaded wrong-answer clips at random. */
 export function playWrong() {
-  const ctx = getCtx();
-  if (!ctx) return;
-  const t = ctx.currentTime;
-  tone(ctx, 160, t, 0.22, 'square', 0.14);
-  tone(ctx, 120, t + 0.08, 0.22, 'square', 0.12);
+  const pool = wrongPool();
+  if (pool.length === 0) return;
+  const audio = pool[Math.floor(Math.random() * pool.length)];
+  try {
+    audio.currentTime = 0;
+    void audio.play();
+  } catch {
+    /* autoplay/load failure — ignore */
+  }
 }
 
 /** Soft celebratory arpeggio for the end-of-game screen. */
