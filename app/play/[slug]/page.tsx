@@ -2,7 +2,8 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 
-import { SoloGame, type PlayQuestion } from '@/components/play/solo-game';
+import { PlayShell } from '@/components/play/play-shell';
+import type { PlayQuestion } from '@/components/play/solo-game';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 
 export const metadata: Metadata = { title: 'العب' };
@@ -90,7 +91,7 @@ export default async function PlayPage({ params }: { params: Promise<{ slug: str
 
   return (
     <main className="min-h-screen">
-      <SoloGame gameId={game.id} gameSlug={game.slug} gameTitle={game.title} questions={questions} />
+      <PlayShell gameId={game.id} gameSlug={game.slug} gameTitle={game.title} questions={questions} />
     </main>
   );
 }

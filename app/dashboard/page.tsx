@@ -1,8 +1,10 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import { Plus, Pencil, Play } from 'lucide-react';
 
 import { Header } from '@/components/header';
-import { CreateSessionButton } from '@/components/create-session-button';
+import { Button } from '@/components/ui/button';
+import { GAME_TYPES, type GameTypeKey } from '@/lib/brand';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 
 export default async function DashboardPage() {
@@ -10,10 +12,7 @@ export default async function DashboardPage() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-
-  if (!user) {
-    redirect('/login');
-  }
+  if (!user) redirect('/login');
 
   const { data: profile } = await supabase
     .from('profiles')
@@ -21,12 +20,11 @@ export default async function DashboardPage() {
     .eq('id', user.id)
     .single();
 
-  const { data: sessions } = await supabase
-    .from('game_sessions')
-    .select('id, code, status, created_at')
-    .eq('host_id', user.id)
-    .order('created_at', { ascending: false })
-    .limit(5);
+  const { data: games } = await supabase
+    .from('games')
+    .select('id, slug, title, game_type, status, questions_count, play_count')
+    .eq('creator_id', user.id)
+    .order('created_at', { ascending: false });
 
   const isAdmin = profile?.role === 'admin';
 
@@ -34,42 +32,68 @@ export default async function DashboardPage() {
     <main>
       <Header />
       <div className="container py-12">
-        <section className="glass rounded-2xl p-6 shadow-glow">
-          <h1 className="font-display text-3xl font-extrabold">لوحة اللاعب</h1>
-          <p className="mt-2 text-muted-foreground">
-            مرحبًا {profile?.display_name ?? 'بك'}، يمكنك إنشاء جلسة استضافة جديدة أو متابعة جلساتك.
-          </p>
-          <div className="mt-6 flex flex-wrap gap-3">
-            <CreateSessionButton />
-            {isAdmin && (
-              <Link
-                href="/admin"
-                className="rounded-xl border border-border bg-card/60 px-5 py-3 font-bold"
-              >
-                لوحة الأدمن
+        <section className="glass flex flex-wrap items-center justify-between gap-4 rounded-2xl p-6 shadow-glow">
+          <div>
+            <h1 className="font-display text-3xl font-extrabold">أهلًا {profile?.display_name ?? 'بك'}</h1>
+            <p className="mt-1 text-muted-foreground">أنشئ ألعابك، عدّلها، وانشرها للعالم.</p>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <Button asChild variant="gradient" size="lg">
+              <Link href="/create">
+                <Plus className="size-5" /> أنشئ لعبة
               </Link>
+            </Button>
+            {isAdmin && (
+              <Button asChild variant="outline" size="lg">
+                <Link href="/admin">لوحة الأدمن</Link>
+              </Button>
             )}
           </div>
         </section>
 
-        <section className="mt-6 grid gap-4">
-          <h2 className="text-xl font-bold">آخر جلساتك</h2>
-          <div className="grid gap-3">
-            {(sessions ?? []).length === 0 && (
-              <div className="glass rounded-xl p-5 text-muted-foreground">لا توجد جلسات بعد.</div>
-            )}
-            {(sessions ?? []).map((session) => (
-              <Link key={session.id} href={`/game/${session.id}`} className="glass rounded-xl p-5 shadow-glow">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div>
-                    <strong className="block">رمز الانضمام: {session.code}</strong>
-                    <span className="text-sm text-muted-foreground">الحالة: {session.status}</span>
+        <section className="mt-8">
+          <h2 className="mb-4 text-xl font-bold">ألعابي</h2>
+          {(games ?? []).length === 0 ? (
+            <div className="glass rounded-2xl p-10 text-center text-muted-foreground">
+              لا توجد ألعاب بعد. اضغط «أنشئ لعبة» للبدء.
+            </div>
+          ) : (
+            <div className="grid gap-3">
+              {(games ?? []).map((game) => {
+                const type = GAME_TYPES[game.game_type as GameTypeKey];
+                return (
+                  <div key={game.id} className="glass flex flex-wrap items-center justify-between gap-3 rounded-xl p-4">
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl" aria-hidden>
+                        {type.emoji}
+                      </span>
+                      <div>
+                        <strong className="block">{game.title}</strong>
+                        <span className="text-xs text-muted-foreground">
+                          {type.label} • {game.questions_count} سؤال •{' '}
+                          {game.status === 'published' ? 'منشورة' : 'مسودّة'}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {game.status === 'published' && (
+                        <Button asChild variant="ghost" size="sm">
+                          <Link href={`/play/${game.slug}`}>
+                            <Play className="size-4" /> العب
+                          </Link>
+                        </Button>
+                      )}
+                      <Button asChild variant="outline" size="sm">
+                        <Link href={`/edit/${game.id}`}>
+                          <Pencil className="size-4" /> تعديل
+                        </Link>
+                      </Button>
+                    </div>
                   </div>
-                  <span className="rounded-full bg-muted px-3 py-1 text-sm">فتح</span>
-                </div>
-              </Link>
-            ))}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </section>
       </div>
     </main>

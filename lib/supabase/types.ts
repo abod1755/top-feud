@@ -821,6 +821,7 @@ export interface Database {
     Views: Record<string, never>;
     Functions: {
       increment_play_count: { Args: { gid: string }; Returns: undefined };
+      save_game_content: { Args: { gid: string; content: Json }; Returns: undefined };
     };
     Enums: {
       collaborator_role: 'viewer' | 'editor' | 'owner';
