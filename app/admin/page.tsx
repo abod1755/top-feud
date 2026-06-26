@@ -2,26 +2,25 @@ import { redirect } from 'next/navigation';
 import { Header } from '@/components/header';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? 'smsm17555@gmail.com';
-
 export default async function AdminPage() {
-  const supabase = createSupabaseServerClient();
-  const { data: userData } = await supabase.auth.getUser();
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  if (!userData.user) {
+  if (!user) {
     redirect('/login');
-  }
-
-  if (userData.user.email !== ADMIN_EMAIL) {
-    redirect('/dashboard');
   }
 
   const { data: profile } = await supabase
     .from('profiles')
     .select('display_name, role')
-    .eq('id', userData.user.id)
+    .eq('id', user.id)
     .single();
 
+  // Authorization is driven by the persisted role only. The bootstrap admin is
+  // assigned via the ADMIN_EMAIL env in the database trigger (Milestone 2), so
+  // there is no hardcoded email gate in application code.
   if (profile?.role !== 'admin') {
     redirect('/dashboard');
   }

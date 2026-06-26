@@ -2,32 +2,120 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  color-scheme: dark;
+/*
+ * Top Feud design tokens.
+ *
+ * Dark-mode-first: the :root values ARE the dark theme so the app renders dark
+ * even before the theme class is applied (no flash). A `.light` class can be
+ * added later for an opt-in light theme. Colors are expressed as raw HSL
+ * channels so Tailwind can apply opacity modifiers (e.g. `bg-primary/40`).
+ */
+@layer base {
+  :root,
+  .dark {
+    color-scheme: dark;
+
+    --background: 222 47% 5%;
+    --foreground: 210 40% 98%;
+
+    --card: 222 44% 8%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222 47% 7%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 158 78% 51%; /* Top Feud emerald */
+    --primary-foreground: 222 47% 6%;
+
+    --secondary: 214 100% 65%; /* electric blue accent */
+    --secondary-foreground: 222 47% 6%;
+
+    --muted: 217 33% 14%;
+    --muted-foreground: 215 20% 65%;
+
+    --accent: 217 33% 17%;
+    --accent-foreground: 210 40% 98%;
+
+    --success: 158 78% 51%;
+    --success-foreground: 222 47% 6%;
+
+    --destructive: 0 72% 55%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 215 28% 20%;
+    --input: 215 28% 18%;
+    --ring: 158 78% 51%;
+
+    --radius: 0.9rem;
+  }
+
+  .light {
+    color-scheme: light;
+    --background: 210 40% 98%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 158 70% 40%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 214 90% 52%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 210 40% 94%;
+    --muted-foreground: 215 16% 40%;
+    --accent: 210 40% 92%;
+    --accent-foreground: 222 47% 11%;
+    --border: 214 32% 88%;
+    --input: 214 32% 88%;
+    --ring: 158 70% 40%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html,
+  body {
+    height: 100%;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    background-image:
+      radial-gradient(circle at top right, hsl(var(--secondary) / 0.14), transparent 30%),
+      radial-gradient(circle at 15% 8%, hsl(var(--primary) / 0.12), transparent 28%);
+    background-attachment: fixed;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: hsl(var(--primary) / 0.28);
+  }
+
+  /* Respect users who prefer reduced motion across all framer-motion + CSS. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
 }
 
-html,
-body {
-  height: 100%;
-}
+@layer components {
+  /* Glassmorphism surface used by cards, headers and panels. */
+  .glass {
+    @apply border border-border/70 bg-card/60 backdrop-blur-xl;
+  }
 
-body {
-  @apply bg-bg text-slate-100 antialiased;
-  background:
-    radial-gradient(circle at top right, rgba(78,163,255,.22), transparent 28%),
-    radial-gradient(circle at 20% 10%, rgba(38,224,163,.14), transparent 26%),
-    linear-gradient(180deg, #06101d 0%, #07111f 55%, #050c16 100%);
-}
-
-a {
-  @apply transition-opacity hover:opacity-90;
-}
-
-input,
-button {
-  font: inherit;
-}
-
-::selection {
-  background: rgba(38, 224, 163, 0.24);
+  /* Skeleton shimmer used by loading states. */
+  .skeleton {
+    @apply relative overflow-hidden rounded-md bg-muted;
+  }
+  .skeleton::after {
+    @apply absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/10 to-transparent content-[''];
+  }
 }

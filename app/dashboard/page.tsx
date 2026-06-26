@@ -5,7 +5,7 @@ import { CreateSessionButton } from '@/components/create-session-button';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 
 export default async function DashboardPage() {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const { data: userData } = await supabase.auth.getUser();
 
   if (!userData.user) {

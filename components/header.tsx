@@ -1,10 +1,19 @@
 import Link from 'next/link';
+
+import { Button } from '@/components/ui/button';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 
+const NAV_LINKS = [
+  { href: '/explore', label: 'اكتشف' },
+  { href: '/leaderboard', label: 'لوحة الصدارة' },
+  { href: '/dashboard', label: 'لوحتي' },
+];
+
 export async function Header() {
-  const supabase = createSupabaseServerClient();
-  const { data: userData } = await supabase.auth.getUser();
-  const user = userData.user;
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   let displayName = user?.user_metadata?.display_name as string | undefined;
 
@@ -19,31 +28,40 @@ export async function Header() {
   }
 
   return (
-    <header className="border-b border-white/10 bg-slate-950/40 backdrop-blur">
-      <div className="mx-auto flex w-[min(1180px,calc(100%-32px))] flex-wrap items-center justify-between gap-4 py-4">
-        <Link href="/" className="flex items-center gap-3 text-white no-underline">
-          <div className="grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-br from-accent to-accent2 font-extrabold text-slate-950">F</div>
-          <div>
-            <strong className="block text-lg leading-none">Top Feud</strong>
-            <span className="mt-1 block text-xs text-slate-400">لعبة العائلة والأسئلة السريعة</span>
-          </div>
+    <header className="sticky top-0 z-40 glass border-b">
+      <div className="container flex h-16 items-center justify-between gap-4">
+        <Link href="/" className="flex items-center gap-3">
+          <span className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-primary to-secondary font-display text-lg font-extrabold text-primary-foreground">
+            F
+          </span>
+          <span className="hidden flex-col leading-none sm:flex">
+            <strong className="font-display text-lg">Top Feud</strong>
+            <span className="mt-1 text-xs text-muted-foreground">منصة فاميلي فيود</span>
+          </span>
         </Link>
 
-        <nav className="hidden gap-6 text-sm text-slate-300 md:flex">
-          <Link href="/tournaments">الجولات</Link>
-          <Link href="/leaderboard">لوحة النقاط</Link>
-          <Link href="/dashboard">لوحة اللاعب</Link>
+        <nav className="hidden items-center gap-1 md:flex">
+          {NAV_LINKS.map((link) => (
+            <Button key={link.href} asChild variant="ghost" size="sm">
+              <Link href={link.href}>{link.label}</Link>
+            </Button>
+          ))}
         </nav>
 
-        <div className="flex items-center gap-3 text-sm">
+        <div className="flex items-center gap-2">
           {user ? (
-            <div className="rounded-full border border-emerald-300/25 bg-emerald-300/10 px-4 py-2 font-bold text-emerald-100">
-              داخل الآن: {displayName}
-            </div>
+            <Button asChild variant="outline" size="sm">
+              <Link href="/dashboard">{displayName}</Link>
+            </Button>
           ) : (
-            <Link href="/login" className="rounded-full border border-white/10 bg-white/5 px-4 py-2 font-bold text-white">
-              تسجيل الدخول
-            </Link>
+            <>
+              <Button asChild variant="ghost" size="sm">
+                <Link href="/login">دخول</Link>
+              </Button>
+              <Button asChild variant="gradient" size="sm">
+                <Link href="/register">ابدأ مجانًا</Link>
+              </Button>
+            </>
           )}
         </div>
       </div>
