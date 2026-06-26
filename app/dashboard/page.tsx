@@ -4,6 +4,7 @@ import { Plus, Pencil, Play } from 'lucide-react';
 
 import { Header } from '@/components/header';
 import { Button } from '@/components/ui/button';
+import { DeleteGameButton } from '@/components/creator/delete-game-button';
 import { GAME_TYPES, type GameTypeKey } from '@/lib/brand';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 
@@ -88,6 +89,7 @@ export default async function DashboardPage() {
                           <Pencil className="size-4" /> تعديل
                         </Link>
                       </Button>
+                      <DeleteGameButton gameId={game.id} title={game.title} />
                     </div>
                   </div>
                 );

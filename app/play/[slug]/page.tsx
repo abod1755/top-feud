@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import type { Metadata } from 'next';
 
 import { PlayShell } from '@/components/play/play-shell';
@@ -69,6 +69,14 @@ async function loadGame(slug: string) {
 
 export default async function PlayPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
+
+  // Playing requires an account.
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect(`/login?next=/play/${slug}`);
+
   const result = await loadGame(slug);
   if (!result) notFound();
 

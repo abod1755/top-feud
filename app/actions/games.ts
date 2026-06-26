@@ -125,3 +125,19 @@ export async function setGameStatus(gameId: string, status: 'draft' | 'published
   revalidatePath(`/edit/${gameId}`);
   return { ok: true as const };
 }
+
+/** Permanently deletes a game (and its rounds/questions/answers via cascade). */
+export async function deleteGame(gameId: string) {
+  const user = await getUser();
+  if (!user) return { ok: false, error: 'يجب تسجيل الدخول' };
+
+  const auth = await assertCanEdit(gameId, user.id);
+  if (!auth.ok) return { ok: false, error: auth.error };
+
+  const { error } = await auth.admin.from('games').delete().eq('id', gameId);
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePath('/dashboard');
+  revalidatePath('/explore');
+  return { ok: true as const };
+}

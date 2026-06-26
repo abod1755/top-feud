@@ -4,15 +4,22 @@ import { Header } from '@/components/header';
 import { AuthForm } from '@/components/auth-form';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 
-export default async function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string }>;
+}) {
+  const { next } = await searchParams;
+  const redirectTo = next && next.startsWith('/') ? next : '/dashboard';
+
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Already signed in? Don't show the auth form — go straight to the dashboard.
+  // Already signed in? Don't show the auth form — go straight to the destination.
   if (user) {
-    redirect('/dashboard');
+    redirect(redirectTo);
   }
 
   return (
@@ -25,7 +32,7 @@ export default async function LoginPage() {
             ادخل بحسابك للوصول إلى جلساتك وإنشاء ألعابك.
           </p>
         </div>
-        <AuthForm mode="login" />
+        <AuthForm mode="login" redirectTo={redirectTo} />
       </div>
     </main>
   );

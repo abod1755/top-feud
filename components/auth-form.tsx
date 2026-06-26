@@ -12,7 +12,7 @@ type Gender = 'male' | 'female';
 const inputClass =
   'w-full rounded-xl border border-border bg-background/50 px-4 py-3 outline-none transition focus:border-primary focus:ring-1 focus:ring-primary';
 
-export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
+export function AuthForm({ mode, redirectTo = '/dashboard' }: { mode: 'login' | 'register'; redirectTo?: string }) {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -31,7 +31,7 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
       const supabase = createSupabaseBrowserClient();
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo: `${window.location.origin}/auth/callback?next=/dashboard` },
+        options: { redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectTo)}` },
       });
       if (oauthError) throw oauthError;
     } catch (err) {
@@ -72,7 +72,7 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
         if (loginError) throw loginError;
       }
 
-      router.push('/dashboard');
+      router.push(redirectTo);
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'حدث خطأ غير متوقع، حاول مرة أخرى.');
