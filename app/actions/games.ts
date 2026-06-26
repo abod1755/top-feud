@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
-import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { createSupabaseActionClient } from '@/lib/supabase/server';
 import type { Json } from '@/lib/supabase/types';
 
 type GameType = 'family_feud' | 'word_builder';
@@ -24,10 +24,7 @@ function randomSuffix(): string {
 
 /** Creates a draft game and sends the creator to its editor. */
 export async function createGame(input: { title: string; gameType: GameType; difficulty: Difficulty }) {
-  const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { supabase, user } = await createSupabaseActionClient();
   if (!user) redirect('/login');
 
   const title = input.title.trim() || 'لعبة بدون عنوان';
@@ -64,7 +61,8 @@ export async function saveGame(
   meta: { title: string; tagline: string; description: string; difficulty: Difficulty },
   content: EditorRound[],
 ) {
-  const supabase = await createSupabaseServerClient();
+  const { supabase, user } = await createSupabaseActionClient();
+  if (!user) return { ok: false, error: 'يجب تسجيل الدخول' };
 
   const { error: metaError } = await supabase
     .from('games')
@@ -89,7 +87,8 @@ export async function saveGame(
 
 /** Flips a game between draft and published. */
 export async function setGameStatus(gameId: string, status: 'draft' | 'published') {
-  const supabase = await createSupabaseServerClient();
+  const { supabase, user } = await createSupabaseActionClient();
+  if (!user) return { ok: false, error: 'يجب تسجيل الدخول' };
   const { error } = await supabase.from('games').update({ status }).eq('id', gameId);
   if (error) return { ok: false, error: error.message };
   revalidatePath('/explore');
