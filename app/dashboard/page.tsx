@@ -44,6 +44,9 @@ export default async function DashboardPage() {
                 <Plus className="size-5" /> أنشئ لعبة
               </Link>
             </Button>
+            <Button asChild variant="outline" size="lg">
+              <Link href="/settings">تعديل ملفي</Link>
+            </Button>
             {isAdmin && (
               <Button asChild variant="outline" size="lg">
                 <Link href="/admin">لوحة الأدمن</Link>
