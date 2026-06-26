@@ -3,6 +3,7 @@ import { Users, Type, Gamepad2, ArrowLeft, Rocket } from 'lucide-react';
 
 import { Header } from '@/components/header';
 import { DoodleBackground } from '@/components/doodle-background';
+import { SplashGate } from '@/components/splash-gate';
 import { BRAND } from '@/lib/brand';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 
@@ -41,6 +42,7 @@ export default async function HomePage() {
 
   return (
     <main className="relative overflow-hidden">
+      <SplashGate />
       <DoodleBackground />
       <Header />
 
