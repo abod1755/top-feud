@@ -1,10 +1,12 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import { Star, Play, Layers, ListChecks } from 'lucide-react';
+import { Play, Layers, ListChecks } from 'lucide-react';
 
 import { Header } from '@/components/header';
 import { Button } from '@/components/ui/button';
+import { FavoriteButton } from '@/components/game/favorite-button';
+import { RatingStars } from '@/components/game/rating-stars';
 import { GAME_TYPES, DIFFICULTY_LABELS, type GameTypeKey } from '@/lib/brand';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { formatNumber } from '@/lib/utils';
@@ -14,7 +16,7 @@ async function getGame(slug: string) {
   const { data: game } = await supabase
     .from('games')
     .select(
-      'id, slug, title, tagline, description, game_type, difficulty, language, estimated_minutes, rounds_count, questions_count, play_count, favorites_count, rating_avg, rating_count, creator_id',
+      'id, slug, title, tagline, description, game_type, difficulty, rounds_count, questions_count, play_count, favorites_count, rating_avg, rating_count, creator_id',
     )
     .eq('slug', slug)
     .maybeSingle();
@@ -22,18 +24,14 @@ async function getGame(slug: string) {
 
   const { data: creator } = await supabase
     .from('profiles')
-    .select('handle, display_name, avatar_url, is_verified')
+    .select('handle, display_name, avatar_url')
     .eq('id', game.creator_id)
     .maybeSingle();
 
   return { game, creator };
 }
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const result = await getGame(slug);
   if (!result) return { title: 'لعبة غير موجودة' };
@@ -47,6 +45,22 @@ export default async function GameDetailPage({ params }: { params: Promise<{ slu
 
   const { game, creator } = result;
   const type = GAME_TYPES[game.game_type as GameTypeKey];
+
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  let favorited = false;
+  let userRating = 0;
+  if (user) {
+    const [{ data: fav }, { data: rating }] = await Promise.all([
+      supabase.from('game_favorites').select('game_id').eq('user_id', user.id).eq('game_id', game.id).maybeSingle(),
+      supabase.from('game_ratings').select('rating').eq('user_id', user.id).eq('game_id', game.id).maybeSingle(),
+    ]);
+    favorited = Boolean(fav);
+    userRating = rating?.rating ?? 0;
+  }
 
   return (
     <main>
@@ -69,16 +83,9 @@ export default async function GameDetailPage({ params }: { params: Promise<{ slu
 
             <h1 className="mt-4 font-display text-4xl font-extrabold">{game.title}</h1>
             {game.tagline && <p className="mt-2 text-lg text-muted-foreground">{game.tagline}</p>}
-
-            {game.description && (
-              <p className="mt-6 leading-8 text-foreground/90">{game.description}</p>
-            )}
+            {game.description && <p className="mt-6 leading-8 text-foreground/90">{game.description}</p>}
 
             <div className="mt-6 flex flex-wrap gap-4 text-sm text-muted-foreground">
-              <span className="inline-flex items-center gap-1.5">
-                <Star className="size-4 fill-primary text-primary" />
-                {game.rating_count > 0 ? `${game.rating_avg.toFixed(1)} (${game.rating_count})` : 'بدون تقييم'}
-              </span>
               <span className="inline-flex items-center gap-1.5">
                 <Play className="size-4" /> {formatNumber(game.play_count)} لعبة
               </span>
@@ -95,7 +102,7 @@ export default async function GameDetailPage({ params }: { params: Promise<{ slu
             </div>
           </div>
 
-          <aside className="glass rounded-2xl p-6 shadow-glow">
+          <aside className="glass space-y-5 rounded-2xl p-6 shadow-glow">
             {creator && (
               <Link
                 href={`/u/${creator.handle}`}
@@ -118,12 +125,32 @@ export default async function GameDetailPage({ params }: { params: Promise<{ slu
               </Link>
             )}
 
-            <Button asChild variant="gradient" size="lg" className="mt-4 w-full">
+            <Button asChild variant="gradient" size="lg" className="w-full">
               <Link href={`/play/${game.slug}`}>العب الآن</Link>
             </Button>
-            <p className="mt-3 text-center text-xs text-muted-foreground">
-              لعب فردي متاح الآن — وضع المضيف والعرض على التلفاز قريبًا.
-            </p>
+
+            <div className="flex items-center justify-between gap-3 border-t border-border pt-4">
+              <span className="text-sm text-muted-foreground">أعجبتك؟</span>
+              <FavoriteButton
+                gameId={game.id}
+                slug={game.slug}
+                initialFavorited={favorited}
+                initialCount={game.favorites_count}
+                isLoggedIn={Boolean(user)}
+              />
+            </div>
+
+            <div className="border-t border-border pt-4">
+              <span className="mb-2 block text-sm text-muted-foreground">قيّم اللعبة</span>
+              <RatingStars
+                gameId={game.id}
+                slug={game.slug}
+                initialUserRating={userRating}
+                average={game.rating_avg}
+                count={game.rating_count}
+                isLoggedIn={Boolean(user)}
+              />
+            </div>
           </aside>
         </div>
       </div>
