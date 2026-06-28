@@ -38,12 +38,12 @@ declare
 begin
   -- Demo users (trigger auto-creates their profiles) ------------------------
   insert into auth.users (id, email, raw_user_meta_data) values
-    (creator_id, 'noura@topfeud.gg', jsonb_build_object('display_name','نورة المبدعة')),
+    (creator_id, 'noura@topfeud.gg', jsonb_build_object('display_name','عبدالله المبدع')),
     (player_id,  'salem@topfeud.gg',  jsonb_build_object('display_name','سالم اللاعب'))
   on conflict (id) do nothing;
 
   update public.profiles
-    set handle = 'noura', display_name = 'نورة المبدعة', role = 'creator',
+    set handle = 'noura', display_name = 'عبدالله المبدع', role = 'creator',
         is_verified = true, bio = 'أصمم ألعاب فاميلي فيود لسهرات العائلة 🎉'
     where id = creator_id;
   update public.profiles

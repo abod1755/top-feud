@@ -7,6 +7,7 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
 
 const NAV_LINKS = [
   { href: '/explore', label: 'اكتشف' },
+  { href: '/categories', label: 'الفئات' },
   { href: '/leaderboard', label: 'لوحة الصدارة' },
   { href: '/dashboard', label: 'لوحتي' },
 ];
