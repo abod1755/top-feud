@@ -414,6 +414,8 @@ export interface Database {
           current_version_id: string | null;
           game_type: Database['public']['Enums']['game_type'];
           config: Json;
+          price_cents: number;
+          currency: string;
         };
         Insert: {
           id?: string;
@@ -443,6 +445,8 @@ export interface Database {
           current_version_id?: string | null;
           game_type?: Database['public']['Enums']['game_type'];
           config?: Json;
+          price_cents?: number;
+          currency?: string;
         };
         Update: {
           id?: string;
@@ -472,6 +476,8 @@ export interface Database {
           current_version_id?: string | null;
           game_type?: Database['public']['Enums']['game_type'];
           config?: Json;
+          price_cents?: number;
+          currency?: string;
         };
         Relationships: [];
       };
@@ -823,6 +829,69 @@ export interface Database {
         };
         Relationships: [];
       };
+      payments: {
+        Row: {
+          id: string;
+          user_id: string;
+          game_id: string;
+          provider: string;
+          provider_charge_id: string | null;
+          amount_cents: number;
+          currency: string;
+          status: Database['public']['Enums']['payment_status'];
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          game_id: string;
+          provider?: string;
+          provider_charge_id?: string | null;
+          amount_cents: number;
+          currency?: string;
+          status?: Database['public']['Enums']['payment_status'];
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          game_id?: string;
+          provider?: string;
+          provider_charge_id?: string | null;
+          amount_cents?: number;
+          currency?: string;
+          status?: Database['public']['Enums']['payment_status'];
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      tickets: {
+        Row: {
+          id: string;
+          user_id: string;
+          game_id: string;
+          payment_id: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          game_id: string;
+          payment_id?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          game_id?: string;
+          payment_id?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       user_achievements: {
         Row: {
           user_id: string;
@@ -846,6 +915,8 @@ export interface Database {
     Functions: {
       increment_play_count: { Args: { gid: string }; Returns: undefined };
       save_game_content: { Args: { gid: string; content: Json }; Returns: undefined };
+      user_has_ticket: { Args: { gid: string; uid?: string }; Returns: boolean };
+      grant_ticket: { Args: { p_user: string; p_game: string; p_payment?: string }; Returns: undefined };
     };
     Enums: {
       collaborator_role: 'viewer' | 'editor' | 'owner';
@@ -856,6 +927,7 @@ export interface Database {
       gender: 'male' | 'female';
       media_kind: 'image' | 'audio' | 'video';
       notification_type: 'follow' | 'comment' | 'rating' | 'favorite' | 'game_published' | 'game_featured' | 'achievement' | 'report_update' | 'system';
+      payment_status: 'pending' | 'paid' | 'failed' | 'refunded';
       report_status: 'open' | 'reviewing' | 'resolved' | 'dismissed';
       report_target: 'game' | 'comment' | 'profile';
       session_status: 'lobby' | 'active' | 'paused' | 'finished' | 'abandoned';

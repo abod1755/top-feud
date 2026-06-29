@@ -78,7 +78,7 @@ export interface EditorRound {
 /** Saves game metadata + content (rounds/questions/answers) atomically. */
 export async function saveGame(
   gameId: string,
-  meta: { title: string; tagline: string; description: string; difficulty: Difficulty },
+  meta: { title: string; tagline: string; description: string; difficulty: Difficulty; priceCents: number },
   content: EditorRound[],
 ) {
   const user = await getUser();
@@ -88,6 +88,9 @@ export async function saveGame(
   if (!auth.ok) return { ok: false, error: auth.error };
   const { admin } = auth;
 
+  // Clamp price to a sane range (0 = free, max 5000 SAR) of whole minor units.
+  const priceCents = Math.max(0, Math.min(500000, Math.round(meta.priceCents || 0)));
+
   const { error: metaError } = await admin
     .from('games')
     .update({
@@ -95,6 +98,7 @@ export async function saveGame(
       tagline: meta.tagline.trim() || null,
       description: meta.description.trim() || null,
       difficulty: meta.difficulty,
+      price_cents: priceCents,
     })
     .eq('id', gameId);
   if (metaError) return { ok: false, error: metaError.message };

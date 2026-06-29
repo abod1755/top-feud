@@ -73,10 +73,16 @@ export default async function PlayPage({ params }: { params: Promise<{ slug: str
 
   const { data: game } = await supabase
     .from('games')
-    .select('id, slug, title, game_type, status, config')
+    .select('id, slug, title, game_type, status, config, price_cents')
     .eq('slug', slug)
     .maybeSingle();
   if (!game) notFound();
+
+  // Paid games require a ticket. Send unentitled players to the game page to buy.
+  if (game.price_cents > 0) {
+    const { data: hasTicket } = await supabase.rpc('user_has_ticket', { gid: game.id, uid: user.id });
+    if (!hasTicket) redirect(`/games/${slug}`);
+  }
 
   if (game.game_type === 'word_builder') {
     const cfg = (game.config ?? {}) as unknown as WordConfig;
