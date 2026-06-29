@@ -6,34 +6,36 @@ import { User, Users, Tv } from 'lucide-react';
 
 import { SoloGame, type PlayQuestion } from '@/components/play/solo-game';
 import { TeamGame } from '@/components/play/team-game';
-import { PresenterGame } from '@/components/play/presenter-game';
+import { TopicGame, type PlayTopic } from '@/components/play/topic-game';
 
 interface PlayShellProps {
   gameId: string;
   gameSlug: string;
   gameTitle: string;
   questions: PlayQuestion[];
+  topics: PlayTopic[];
 }
 
 type Mode = 'solo' | 'teams' | 'presenter';
 
-export function PlayShell(props: PlayShellProps) {
+export function PlayShell({ gameId, gameSlug, gameTitle, questions, topics }: PlayShellProps) {
   const [mode, setMode] = useState<Mode | null>(null);
+  const base = { gameId, gameSlug, gameTitle };
 
-  if (mode === 'solo') return <SoloGame {...props} />;
-  if (mode === 'teams') return <TeamGame {...props} />;
-  if (mode === 'presenter') return <PresenterGame {...props} />;
+  if (mode === 'solo') return <SoloGame {...base} questions={questions} />;
+  if (mode === 'teams') return <TeamGame {...base} questions={questions} />;
+  if (mode === 'presenter') return <TopicGame {...base} topics={topics} />;
 
   const options: { key: Mode; title: string; desc: string; tint: string; Icon: typeof User }[] = [
     { key: 'solo', title: 'لعب فردي', desc: 'تحدّى نفسك واجمع أعلى نقاط', tint: 'hsl(176 76% 49%)', Icon: User },
     { key: 'teams', title: 'فريقان', desc: 'تنافسوا بالتناوب على شاشة واحدة', tint: '#F43F9D', Icon: Users },
-    { key: 'presenter', title: 'مضيف / تلفاز', desc: 'اعرض على التلفاز وأدِر اللعبة بنفسك', tint: '#FFCE1F', Icon: Tv },
+    { key: 'presenter', title: 'مضيف / تلفاز', desc: 'مواضيع على التلفاز، كل فريق يختار', tint: '#FFCE1F', Icon: Tv },
   ];
 
   return (
     <div className="container grid min-h-[70vh] place-items-center py-10 text-center">
       <div className="w-full max-w-2xl">
-        <h1 className="font-display text-3xl font-extrabold">{props.gameTitle}</h1>
+        <h1 className="font-display text-3xl font-extrabold">{gameTitle}</h1>
         <p className="mt-2 text-muted-foreground">اختر طريقة اللعب</p>
 
         <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-3">
@@ -52,17 +54,14 @@ export function PlayShell(props: PlayShellProps) {
               </span>
               <h3 className="font-display text-xl font-extrabold">{opt.title}</h3>
               <p className="mt-1 text-sm text-muted-foreground">{opt.desc}</p>
-              <span
-                className="btn-chunky mt-4 inline-flex w-full items-center justify-center py-2.5"
-                style={{ backgroundColor: opt.tint }}
-              >
+              <span className="btn-chunky mt-4 inline-flex w-full items-center justify-center py-2.5" style={{ backgroundColor: opt.tint }}>
                 ابدأ
               </span>
             </button>
           ))}
         </div>
 
-        <Link href={`/games/${props.gameSlug}`} className="mt-6 inline-block text-sm text-muted-foreground hover:text-foreground">
+        <Link href={`/games/${gameSlug}`} className="mt-6 inline-block text-sm text-muted-foreground hover:text-foreground">
           ← رجوع للعبة
         </Link>
       </div>

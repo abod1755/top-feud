@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 
 import { PlayShell } from '@/components/play/play-shell';
 import type { PlayQuestion } from '@/components/play/solo-game';
+import type { PlayTopic } from '@/components/play/topic-game';
 import { WordGame, type WordRound } from '@/components/play/word-game';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 
@@ -14,14 +15,17 @@ interface WordConfig {
   rounds?: { letters?: string[]; duration_seconds?: number; min_word_length?: number }[];
 }
 
-async function loadFeudQuestions(supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>, gameId: string) {
+async function loadFeud(
+  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
+  gameId: string,
+): Promise<{ questions: PlayQuestion[]; topics: PlayTopic[] }> {
   const { data: rounds } = await supabase
     .from('rounds')
-    .select('id, position, time_limit_seconds')
+    .select('id, position, title, time_limit_seconds')
     .eq('game_id', gameId)
     .order('position');
   const roundIds = (rounds ?? []).map((r) => r.id);
-  if (roundIds.length === 0) return [] as PlayQuestion[];
+  if (roundIds.length === 0) return { questions: [], topics: [] };
 
   const { data: questions } = await supabase
     .from('questions')
@@ -35,23 +39,28 @@ async function loadFeudQuestions(supabase: Awaited<ReturnType<typeof createSupab
     .in('question_id', questionIds)
     .order('position');
 
-  const roundOrder = new Map((rounds ?? []).map((r, i) => [r.id, i]));
   const roundTime = new Map((rounds ?? []).map((r) => [r.id, r.time_limit_seconds]));
 
-  return (questions ?? [])
-    .slice()
-    .sort((a, b) => {
-      const ra = roundOrder.get(a.round_id) ?? 0;
-      const rb = roundOrder.get(b.round_id) ?? 0;
-      return ra - rb || a.position - b.position;
-    })
-    .map((q) => ({
-      id: q.id,
-      prompt: q.prompt,
-      timeLimit: q.time_limit_seconds ?? roundTime.get(q.round_id) ?? DEFAULT_TIME,
-      answers: (answers ?? []).filter((a) => a.question_id === q.id).map((a) => ({ text: a.text, points: a.points })),
+  const toPlay = (q: { id: string; round_id: string; prompt: string; time_limit_seconds: number | null }): PlayQuestion => ({
+    id: q.id,
+    prompt: q.prompt,
+    timeLimit: q.time_limit_seconds ?? roundTime.get(q.round_id) ?? DEFAULT_TIME,
+    answers: (answers ?? []).filter((a) => a.question_id === q.id).map((a) => ({ text: a.text, points: a.points })),
+  });
+
+  const topics: PlayTopic[] = (rounds ?? [])
+    .map((r) => ({
+      title: r.title,
+      questions: (questions ?? [])
+        .filter((q) => q.round_id === r.id)
+        .sort((a, b) => a.position - b.position)
+        .map(toPlay)
+        .filter((q) => q.answers.length > 0),
     }))
-    .filter((q) => q.answers.length > 0) satisfies PlayQuestion[];
+    .filter((t) => t.questions.length > 0);
+
+  const flat = topics.flatMap((t) => t.questions);
+  return { questions: flat, topics };
 }
 
 export default async function PlayPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -72,13 +81,8 @@ export default async function PlayPage({ params }: { params: Promise<{ slug: str
   if (game.game_type === 'word_builder') {
     const cfg = (game.config ?? {}) as unknown as WordConfig;
     const wordRounds: WordRound[] = (cfg.rounds ?? [])
-      .map((r) => ({
-        letters: r.letters ?? [],
-        duration: r.duration_seconds ?? 90,
-        minLen: r.min_word_length ?? 3,
-      }))
+      .map((r) => ({ letters: r.letters ?? [], duration: r.duration_seconds ?? 90, minLen: r.min_word_length ?? 3 }))
       .filter((r) => r.letters.length > 0);
-
     if (wordRounds.length === 0) {
       return (
         <div className="container grid min-h-[70vh] place-items-center text-center text-muted-foreground">
@@ -86,7 +90,6 @@ export default async function PlayPage({ params }: { params: Promise<{ slug: str
         </div>
       );
     }
-
     return (
       <main className="min-h-screen">
         <WordGame gameId={game.id} gameSlug={game.slug} gameTitle={game.title} rounds={wordRounds} />
@@ -94,11 +97,11 @@ export default async function PlayPage({ params }: { params: Promise<{ slug: str
     );
   }
 
-  const questions = await loadFeudQuestions(supabase, game.id);
+  const { questions, topics } = await loadFeud(supabase, game.id);
 
   return (
     <main className="min-h-screen">
-      <PlayShell gameId={game.id} gameSlug={game.slug} gameTitle={game.title} questions={questions} />
+      <PlayShell gameId={game.id} gameSlug={game.slug} gameTitle={game.title} questions={questions} topics={topics} />
     </main>
   );
 }
