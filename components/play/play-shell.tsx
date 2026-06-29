@@ -2,10 +2,11 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { User, Users } from 'lucide-react';
+import { User, Users, Tv } from 'lucide-react';
 
 import { SoloGame, type PlayQuestion } from '@/components/play/solo-game';
 import { TeamGame } from '@/components/play/team-game';
+import { PresenterGame } from '@/components/play/presenter-game';
 
 interface PlayShellProps {
   gameId: string;
@@ -14,17 +15,19 @@ interface PlayShellProps {
   questions: PlayQuestion[];
 }
 
-type Mode = 'solo' | 'teams';
+type Mode = 'solo' | 'teams' | 'presenter';
 
 export function PlayShell(props: PlayShellProps) {
   const [mode, setMode] = useState<Mode | null>(null);
 
   if (mode === 'solo') return <SoloGame {...props} />;
   if (mode === 'teams') return <TeamGame {...props} />;
+  if (mode === 'presenter') return <PresenterGame {...props} />;
 
   const options: { key: Mode; title: string; desc: string; tint: string; Icon: typeof User }[] = [
     { key: 'solo', title: 'لعب فردي', desc: 'تحدّى نفسك واجمع أعلى نقاط', tint: 'hsl(176 76% 49%)', Icon: User },
     { key: 'teams', title: 'فريقان', desc: 'تنافسوا بالتناوب على شاشة واحدة', tint: '#F43F9D', Icon: Users },
+    { key: 'presenter', title: 'مضيف / تلفاز', desc: 'اعرض على التلفاز وأدِر اللعبة بنفسك', tint: '#FFCE1F', Icon: Tv },
   ];
 
   return (
@@ -33,7 +36,7 @@ export function PlayShell(props: PlayShellProps) {
         <h1 className="font-display text-3xl font-extrabold">{props.gameTitle}</h1>
         <p className="mt-2 text-muted-foreground">اختر طريقة اللعب</p>
 
-        <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2">
+        <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-3">
           {options.map((opt) => (
             <button
               key={opt.key}
