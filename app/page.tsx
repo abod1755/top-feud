@@ -47,6 +47,8 @@ export default async function HomePage() {
       <Header />
 
       <section className="container flex flex-col items-center pb-20 pt-16 text-center">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/logo-icon.svg" alt="" width={104} height={104} className="mb-5 h-24 w-24 drop-shadow-[0_8px_0_rgba(0,0,0,0.35)] md:h-28 md:w-28" />
         <h1 className="text-sticker font-display text-7xl font-extrabold leading-none md:text-8xl">
           {BRAND.name}
         </h1>

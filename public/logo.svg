@@ -1,0 +1,33 @@
+<svg viewBox="0 0 760 240" xmlns="http://www.w3.org/2000/svg" font-family="'Cairo','Tajawal','Tahoma',sans-serif">
+  <defs>
+    <style>@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@900&amp;display=swap');</style>
+    <linearGradient id="badge" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#42EFD4"/>
+      <stop offset="1" stop-color="#12B49E"/>
+    </linearGradient>
+    <linearGradient id="word" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#CDEEE9"/>
+    </linearGradient>
+  </defs>
+
+  <!-- confetti -->
+  <circle cx="120" cy="46" r="7" fill="#F43F9D"/>
+  <rect x="206" y="28" width="15" height="15" rx="3" fill="#FFCE1F" transform="rotate(20 213 35)"/>
+  <circle cx="455" cy="44" r="6" fill="#42EFD4"/>
+  <rect x="44" y="150" width="13" height="13" rx="3" fill="#42EFD4" transform="rotate(-15 50 156)"/>
+  <circle cx="430" cy="198" r="6" fill="#FFCE1F"/>
+
+  <!-- wordmark -->
+  <text x="300" y="162" text-anchor="middle" font-size="150" font-weight="900" fill="url(#word)" stroke="#06141a" stroke-width="2">لمّة</text>
+  <path d="M130 196 Q300 226 470 196" fill="none" stroke="#F43F9D" stroke-width="11" stroke-linecap="round"/>
+
+  <!-- icon badge -->
+  <g transform="translate(566,46)">
+    <rect x="7" y="15" width="150" height="150" rx="46" fill="#03252b"/>
+    <rect x="0" y="0" width="150" height="150" rx="46" fill="url(#badge)" stroke="#ffffff" stroke-width="6"/>
+    <path d="M22 20 q53 -10 106 0 q-53 22 -106 0 z" fill="#ffffff" opacity="0.25"/>
+    <text x="75" y="120" text-anchor="middle" font-size="118" font-weight="900" fill="#06141a">ل</text>
+    <circle cx="130" cy="22" r="9" fill="#FFCE1F" stroke="#06141a" stroke-width="2.5"/>
+  </g>
+</svg>

@@ -1,0 +1,15 @@
+<svg viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg" font-family="'Cairo','Tajawal','Tahoma',sans-serif">
+  <defs>
+    <style>@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@900&amp;display=swap');</style>
+    <linearGradient id="b" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#42EFD4"/>
+      <stop offset="1" stop-color="#12B49E"/>
+    </linearGradient>
+  </defs>
+  <rect x="49" y="58" width="150" height="150" rx="46" fill="#03252b"/>
+  <rect x="44" y="44" width="150" height="150" rx="46" fill="url(#b)" stroke="#ffffff" stroke-width="6"/>
+  <path d="M66 64 q53 -10 106 0 q-53 22 -106 0 z" fill="#ffffff" opacity="0.25"/>
+  <text x="119" y="164" text-anchor="middle" font-size="120" font-weight="900" fill="#06141a">ل</text>
+  <circle cx="174" cy="66" r="9" fill="#FFCE1F" stroke="#06141a" stroke-width="2.5"/>
+  <circle cx="58" cy="150" r="6" fill="#F43F9D"/>
+</svg>

@@ -50,9 +50,8 @@ export async function Header() {
     <header className="sticky top-0 z-40 glass border-b">
       <div className="container flex h-16 items-center justify-between gap-4">
         <Link href="/" className="flex items-center gap-3">
-          <span className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-primary to-secondary font-display text-xl font-extrabold text-primary-foreground">
-            ل
-          </span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo-icon.svg" alt="لمّة" width={40} height={40} className="h-10 w-10" />
           <span className="hidden flex-col leading-none sm:flex">
             <strong className="font-display text-lg">{BRAND.name}</strong>
             <span className="mt-1 text-xs text-muted-foreground">{BRAND.tagline}</span>
