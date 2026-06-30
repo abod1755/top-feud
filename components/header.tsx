@@ -1,11 +1,19 @@
 import Link from 'next/link';
+import { ShoppingBag, type LucideIcon } from 'lucide-react';
 
 import { signOutAction } from '@/app/actions/auth';
 import { Button } from '@/components/ui/button';
 import { BRAND } from '@/lib/brand';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 
-const NAV_LINKS = [
+interface NavLink {
+  href: string;
+  label: string;
+  Icon?: LucideIcon;
+}
+
+const NAV_LINKS: NavLink[] = [
+  { href: '/store', label: 'المتجر', Icon: ShoppingBag },
   { href: '/explore', label: 'اكتشف' },
   { href: '/categories', label: 'الفئات' },
   { href: '/leaderboard', label: 'لوحة الصدارة' },
@@ -19,16 +27,22 @@ export async function Header() {
   } = await supabase.auth.getUser();
 
   let displayName = user?.user_metadata?.display_name as string | undefined;
+  let isAdmin = false;
 
   if (user) {
     const { data: profile } = await supabase
       .from('profiles')
-      .select('display_name')
+      .select('display_name, role')
       .eq('id', user.id)
       .maybeSingle();
 
     displayName = profile?.display_name ?? displayName ?? user.email?.split('@')[0] ?? 'لاعب';
+    isAdmin = profile?.role === 'admin';
   }
+
+  const navLinks: NavLink[] = isAdmin
+    ? [...NAV_LINKS, { href: '/admin/sales', label: 'المبيعات' }]
+    : NAV_LINKS;
 
   return (
     <header className="sticky top-0 z-40 glass border-b">
@@ -44,9 +58,12 @@ export async function Header() {
         </Link>
 
         <nav className="hidden items-center gap-1 md:flex">
-          {NAV_LINKS.map((link) => (
+          {navLinks.map((link) => (
             <Button key={link.href} asChild variant="ghost" size="sm">
-              <Link href={link.href}>{link.label}</Link>
+              <Link href={link.href}>
+                {link.Icon && <link.Icon className="size-4" />}
+                {link.label}
+              </Link>
             </Button>
           ))}
         </nav>

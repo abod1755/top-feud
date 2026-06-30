@@ -1,7 +1,9 @@
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import type { Metadata } from 'next';
 
 import { Header } from '@/components/header';
+import { Button } from '@/components/ui/button';
 import { RoleSelect } from '@/components/admin/role-select';
 import { ToggleButton } from '@/components/admin/toggle-button';
 import { ReportButtons } from '@/components/admin/report-buttons';
@@ -47,7 +49,12 @@ export default async function AdminPage() {
     <main>
       <Header />
       <div className="container space-y-8 py-10">
-        <h1 className="font-display text-4xl font-extrabold">لوحة الأدمن</h1>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h1 className="font-display text-4xl font-extrabold">لوحة الأدمن</h1>
+          <Button asChild variant="gradient" size="sm">
+            <Link href="/admin/sales">💰 المبيعات والإيرادات</Link>
+          </Button>
+        </div>
 
         <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
           {stat('المستخدمون', usersCount.count ?? 0)}
