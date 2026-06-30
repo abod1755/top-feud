@@ -4,21 +4,19 @@ import type { Metadata } from 'next';
 import { Play, Layers, ListChecks } from 'lucide-react';
 
 import { Header } from '@/components/header';
-import { Button } from '@/components/ui/button';
 import { FavoriteButton } from '@/components/game/favorite-button';
 import { RatingStars } from '@/components/game/rating-stars';
-import { BuyButton } from '@/components/game/buy-button';
+import { PlayButton } from '@/components/game/play-button';
 import { GAME_TYPES, DIFFICULTY_LABELS, type GameTypeKey } from '@/lib/brand';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { formatNumber } from '@/lib/utils';
-import { formatPrice } from '@/lib/money';
 
 async function getGame(slug: string) {
   const supabase = await createSupabaseServerClient();
   const { data: game } = await supabase
     .from('games')
     .select(
-      'id, slug, title, tagline, description, game_type, difficulty, rounds_count, questions_count, play_count, favorites_count, rating_avg, rating_count, creator_id, price_cents, currency',
+      'id, slug, title, tagline, description, game_type, difficulty, rounds_count, questions_count, play_count, favorites_count, rating_avg, rating_count, creator_id, ticket_cost',
     )
     .eq('slug', slug)
     .maybeSingle();
@@ -64,11 +62,11 @@ export default async function GameDetailPage({ params }: { params: Promise<{ slu
     userRating = rating?.rating ?? 0;
   }
 
-  const isPaid = game.price_cents > 0;
-  let owned = !isPaid;
-  if (user && isPaid) {
-    const { data: hasTicket } = await supabase.rpc('user_has_ticket', { gid: game.id, uid: user.id });
-    owned = Boolean(hasTicket);
+  const ticketCost = game.ticket_cost;
+  let balance = 0;
+  if (user) {
+    const { data: profile } = await supabase.from('profiles').select('ticket_balance').eq('id', user.id).maybeSingle();
+    balance = profile?.ticket_balance ?? 0;
   }
 
   return (
@@ -88,9 +86,9 @@ export default async function GameDetailPage({ params }: { params: Promise<{ slu
               <span className="rounded-full bg-muted px-3 py-1 text-sm text-muted-foreground">
                 {DIFFICULTY_LABELS[game.difficulty] ?? game.difficulty}
               </span>
-              {isPaid ? (
+              {ticketCost > 0 ? (
                 <span className="rounded-full bg-[#FFCE1F]/20 px-3 py-1 text-sm font-semibold text-[#FFCE1F]">
-                  🎟️ {formatPrice(game.price_cents, game.currency)}
+                  🎟️ {ticketCost} {ticketCost === 1 ? 'تذكرة' : 'تذاكر'}
                 </span>
               ) : (
                 <span className="rounded-full bg-success/15 px-3 py-1 text-sm font-semibold text-success">مجانية</span>
@@ -141,25 +139,13 @@ export default async function GameDetailPage({ params }: { params: Promise<{ slu
               </Link>
             )}
 
-            {isPaid && !owned ? (
-              <BuyButton
-                gameId={game.id}
-                slug={game.slug}
-                priceCents={game.price_cents}
-                currency={game.currency}
-                isLoggedIn={Boolean(user)}
-              />
-            ) : (
-              <div className="space-y-2">
-                <Button asChild variant="gradient" size="lg" className="w-full">
-                  <Link href={`/play/${game.slug}`}>العب الآن</Link>
-                </Button>
-                {isPaid && owned && (
-                  <p className="text-center text-xs font-semibold text-success">✓ تملك تذكرة هذه اللعبة</p>
-                )}
-                {!isPaid && <p className="text-center text-xs text-muted-foreground">مجانية</p>}
-              </div>
-            )}
+            <PlayButton
+              gameId={game.id}
+              slug={game.slug}
+              ticketCost={ticketCost}
+              balance={balance}
+              isLoggedIn={Boolean(user)}
+            />
 
             <div className="flex items-center justify-between gap-3 border-t border-border pt-4">
               <span className="text-sm text-muted-foreground">أعجبتك؟</span>

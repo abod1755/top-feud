@@ -18,7 +18,7 @@ export default async function EditPage({ params }: { params: Promise<{ id: strin
 
   const { data: game } = await supabase
     .from('games')
-    .select('id, slug, title, tagline, description, difficulty, game_type, status, creator_id, price_cents')
+    .select('id, slug, title, tagline, description, difficulty, game_type, status, creator_id, ticket_cost')
     .eq('id', id)
     .maybeSingle();
 
@@ -63,7 +63,7 @@ export default async function EditPage({ params }: { params: Promise<{ id: strin
     difficulty: game.difficulty,
     gameType: game.game_type,
     status: game.status,
-    priceCents: game.price_cents,
+    ticketCost: game.ticket_cost,
   };
 
   return (

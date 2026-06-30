@@ -416,6 +416,7 @@ export interface Database {
           config: Json;
           price_cents: number;
           currency: string;
+          ticket_cost: number;
         };
         Insert: {
           id?: string;
@@ -447,6 +448,7 @@ export interface Database {
           config?: Json;
           price_cents?: number;
           currency?: string;
+          ticket_cost?: number;
         };
         Update: {
           id?: string;
@@ -478,6 +480,7 @@ export interface Database {
           config?: Json;
           price_cents?: number;
           currency?: string;
+          ticket_cost?: number;
         };
         Relationships: [];
       };
@@ -574,6 +577,7 @@ export interface Database {
           created_at: string;
           updated_at: string;
           gender: Database['public']['Enums']['gender'] | null;
+          ticket_balance: number;
         };
         Insert: {
           id: string;
@@ -592,6 +596,7 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
           gender?: Database['public']['Enums']['gender'] | null;
+          ticket_balance?: number;
         };
         Update: {
           id?: string;
@@ -610,6 +615,7 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
           gender?: Database['public']['Enums']['gender'] | null;
+          ticket_balance?: number;
         };
         Relationships: [];
       };
@@ -833,7 +839,9 @@ export interface Database {
         Row: {
           id: string;
           user_id: string;
-          game_id: string;
+          game_id: string | null;
+          package_id: string | null;
+          tickets_granted: number;
           provider: string;
           provider_charge_id: string | null;
           amount_cents: number;
@@ -845,7 +853,9 @@ export interface Database {
         Insert: {
           id?: string;
           user_id: string;
-          game_id: string;
+          game_id?: string | null;
+          package_id?: string | null;
+          tickets_granted?: number;
           provider?: string;
           provider_charge_id?: string | null;
           amount_cents: number;
@@ -857,7 +867,9 @@ export interface Database {
         Update: {
           id?: string;
           user_id?: string;
-          game_id?: string;
+          game_id?: string | null;
+          package_id?: string | null;
+          tickets_granted?: number;
           provider?: string;
           provider_charge_id?: string | null;
           amount_cents?: number;
@@ -865,6 +877,99 @@ export interface Database {
           status?: Database['public']['Enums']['payment_status'];
           created_at?: string;
           updated_at?: string;
+        };
+        Relationships: [];
+      };
+      ticket_packages: {
+        Row: {
+          id: string;
+          slug: string;
+          name: string;
+          tickets: number;
+          price_cents: number;
+          currency: string;
+          is_active: boolean;
+          position: number;
+        };
+        Insert: {
+          id?: string;
+          slug: string;
+          name: string;
+          tickets: number;
+          price_cents: number;
+          currency?: string;
+          is_active?: boolean;
+          position?: number;
+        };
+        Update: {
+          id?: string;
+          slug?: string;
+          name?: string;
+          tickets?: number;
+          price_cents?: number;
+          currency?: string;
+          is_active?: boolean;
+          position?: number;
+        };
+        Relationships: [];
+      };
+      ticket_ledger: {
+        Row: {
+          id: string;
+          user_id: string;
+          delta: number;
+          reason: string;
+          package_id: string | null;
+          game_id: string | null;
+          payment_id: string | null;
+          balance_after: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          delta: number;
+          reason: string;
+          package_id?: string | null;
+          game_id?: string | null;
+          payment_id?: string | null;
+          balance_after: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          delta?: number;
+          reason?: string;
+          package_id?: string | null;
+          game_id?: string | null;
+          payment_id?: string | null;
+          balance_after?: number;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      ticket_plays: {
+        Row: {
+          id: string;
+          user_id: string;
+          game_id: string;
+          created_at: string;
+          expires_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          game_id: string;
+          created_at?: string;
+          expires_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          game_id?: string;
+          created_at?: string;
+          expires_at?: string;
         };
         Relationships: [];
       };
@@ -917,6 +1022,9 @@ export interface Database {
       save_game_content: { Args: { gid: string; content: Json }; Returns: undefined };
       user_has_ticket: { Args: { gid: string; uid?: string }; Returns: boolean };
       grant_ticket: { Args: { p_user: string; p_game: string; p_payment?: string }; Returns: undefined };
+      has_active_play: { Args: { gid: string; uid?: string }; Returns: boolean };
+      grant_tickets: { Args: { p_user: string; p_count: number; p_payment: string; p_package?: string }; Returns: number };
+      spend_ticket: { Args: { p_user: string; p_game: string }; Returns: { ok: boolean; balance: number; play_id: string | null }[] };
     };
     Enums: {
       collaborator_role: 'viewer' | 'editor' | 'owner';

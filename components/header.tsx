@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ShoppingBag, type LucideIcon } from 'lucide-react';
+import { ShoppingBag, Ticket, type LucideIcon } from 'lucide-react';
 
 import { signOutAction } from '@/app/actions/auth';
 import { Button } from '@/components/ui/button';
@@ -28,16 +28,18 @@ export async function Header() {
 
   let displayName = user?.user_metadata?.display_name as string | undefined;
   let isAdmin = false;
+  let balance = 0;
 
   if (user) {
     const { data: profile } = await supabase
       .from('profiles')
-      .select('display_name, role')
+      .select('display_name, role, ticket_balance')
       .eq('id', user.id)
       .maybeSingle();
 
     displayName = profile?.display_name ?? displayName ?? user.email?.split('@')[0] ?? 'لاعب';
     isAdmin = profile?.role === 'admin';
+    balance = profile?.ticket_balance ?? 0;
   }
 
   const navLinks: NavLink[] = isAdmin
@@ -71,6 +73,14 @@ export async function Header() {
         <div className="flex items-center gap-2">
           {user ? (
             <>
+              <Link
+                href="/store"
+                className="flex items-center gap-1.5 rounded-full border border-[#FFCE1F]/40 bg-[#FFCE1F]/10 px-3 py-1.5 text-sm font-bold text-[#FFCE1F]"
+                title="رصيد التذاكر"
+              >
+                <Ticket className="size-4" />
+                {balance}
+              </Link>
               <Button asChild variant="outline" size="sm">
                 <Link href="/dashboard">{displayName}</Link>
               </Button>

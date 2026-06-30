@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import type { Metadata } from 'next';
-import { ArrowRight, TrendingUp, Ticket, Wallet, Tag } from 'lucide-react';
+import { ArrowRight, Wallet, Ticket, Package, PlayCircle } from 'lucide-react';
 
 import { Header } from '@/components/header';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
@@ -22,37 +22,57 @@ export default async function SalesPage() {
   const { data: me } = await admin.from('profiles').select('role').eq('id', user.id).maybeSingle();
   if (me?.role !== 'admin') redirect('/dashboard');
 
-  // Paid transactions power revenue; everything else is reconciliation context.
-  const [{ data: paid }, { data: recent }, { data: paidGames }] = await Promise.all([
-    admin.from('payments').select('game_id, amount_cents, currency').eq('status', 'paid'),
+  const [{ data: paid }, { data: recent }, { data: packages }, { data: plays }] = await Promise.all([
+    admin.from('payments').select('package_id, amount_cents, tickets_granted').eq('status', 'paid'),
     admin
       .from('payments')
-      .select('id, game_id, user_id, amount_cents, currency, status, created_at')
+      .select('id, package_id, user_id, amount_cents, currency, status, created_at')
       .order('created_at', { ascending: false })
       .limit(25),
-    admin.from('games').select('id, title, slug, price_cents').gt('price_cents', 0),
+    admin.from('ticket_packages').select('id, name'),
+    admin.from('ticket_ledger').select('game_id, delta').eq('reason', 'play'),
   ]);
 
   const paidRows = paid ?? [];
   const totalRevenue = paidRows.reduce((s, p) => s + p.amount_cents, 0);
-  const totalTickets = paidRows.length;
-  const avgTicket = totalTickets > 0 ? Math.round(totalRevenue / totalTickets) : 0;
+  const packagesSold = paidRows.length;
+  const ticketsSold = paidRows.reduce((s, p) => s + (p.tickets_granted ?? 0), 0);
+  const ticketsSpent = (plays ?? []).reduce((s, r) => s + Math.abs(r.delta), 0);
 
-  // Per-game revenue & tickets.
-  const titleById = new Map((paidGames ?? []).map((g) => [g.id, g.title]));
-  const slugById = new Map((paidGames ?? []).map((g) => [g.id, g.slug]));
-  const perGame = new Map<string, { tickets: number; revenue: number }>();
+  const pkgName = new Map((packages ?? []).map((p) => [p.id, p.name]));
+
+  // Per-package revenue.
+  const perPkg = new Map<string, { count: number; revenue: number; tickets: number }>();
   for (const p of paidRows) {
-    const cur = perGame.get(p.game_id) ?? { tickets: 0, revenue: 0 };
-    cur.tickets += 1;
+    const key = p.package_id ?? 'unknown';
+    const cur = perPkg.get(key) ?? { count: 0, revenue: 0, tickets: 0 };
+    cur.count += 1;
     cur.revenue += p.amount_cents;
-    perGame.set(p.game_id, cur);
+    cur.tickets += p.tickets_granted ?? 0;
+    perPkg.set(key, cur);
   }
-  const gameRows = [...perGame.entries()]
-    .map(([id, v]) => ({ id, title: titleById.get(id) ?? '—', slug: slugById.get(id), ...v }))
+  const pkgRows = [...perPkg.entries()]
+    .map(([id, v]) => ({ id, name: pkgName.get(id) ?? '—', ...v }))
     .sort((a, b) => b.revenue - a.revenue);
 
-  // Buyer names for the recent list.
+  // Top games by tickets spent.
+  const perGame = new Map<string, number>();
+  for (const r of plays ?? []) {
+    if (!r.game_id) continue;
+    perGame.set(r.game_id, (perGame.get(r.game_id) ?? 0) + Math.abs(r.delta));
+  }
+  const gameIds = [...perGame.keys()];
+  const { data: gameTitles } = gameIds.length
+    ? await admin.from('games').select('id, title, slug').in('id', gameIds)
+    : { data: [] };
+  const gTitle = new Map((gameTitles ?? []).map((g) => [g.id, g.title]));
+  const gSlug = new Map((gameTitles ?? []).map((g) => [g.id, g.slug]));
+  const topGames = [...perGame.entries()]
+    .map(([id, tickets]) => ({ id, title: gTitle.get(id) ?? '—', slug: gSlug.get(id), tickets }))
+    .sort((a, b) => b.tickets - a.tickets)
+    .slice(0, 10);
+
+  // Buyer names for recent list.
   const buyerIds = [...new Set((recent ?? []).map((r) => r.user_id))];
   const { data: buyers } = buyerIds.length
     ? await admin.from('profiles').select('id, display_name').in('id', buyerIds)
@@ -87,42 +107,61 @@ export default async function SalesPage() {
 
         <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
           {stat(Wallet, 'إجمالي الإيراد', formatPrice(totalRevenue))}
-          {stat(Ticket, 'تذاكر مباعة', formatNumber(totalTickets))}
-          {stat(Tag, 'متوسط التذكرة', formatPrice(avgTicket))}
-          {stat(TrendingUp, 'ألعاب مدفوعة', formatNumber((paidGames ?? []).length))}
+          {stat(Package, 'باقات مُباعة', formatNumber(packagesSold))}
+          {stat(Ticket, 'تذاكر مُباعة', formatNumber(ticketsSold))}
+          {stat(PlayCircle, 'تذاكر مصروفة', formatNumber(ticketsSpent))}
         </section>
 
-        {/* Per-game breakdown */}
+        {/* Revenue by package */}
         <section>
-          <h2 className="mb-3 text-xl font-bold">الإيراد حسب اللعبة</h2>
-          {gameRows.length === 0 ? (
+          <h2 className="mb-3 text-xl font-bold">الإيراد حسب الباقة</h2>
+          {pkgRows.length === 0 ? (
             <div className="glass rounded-xl p-5 text-muted-foreground">لا توجد مبيعات بعد.</div>
           ) : (
             <div className="overflow-hidden rounded-2xl border border-border">
               <table className="w-full text-right text-sm">
                 <thead className="bg-muted/50 text-muted-foreground">
                   <tr>
-                    <th className="px-4 py-3 font-semibold">اللعبة</th>
+                    <th className="px-4 py-3 font-semibold">الباقة</th>
+                    <th className="px-4 py-3 font-semibold">مرّات الشراء</th>
                     <th className="px-4 py-3 font-semibold">تذاكر</th>
                     <th className="px-4 py-3 font-semibold">الإيراد</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {gameRows.map((g) => (
-                    <tr key={g.id} className="border-t border-border">
-                      <td className="px-4 py-3 font-semibold">
-                        {g.slug ? (
-                          <Link href={`/games/${g.slug}`} className="hover:text-primary">{g.title}</Link>
-                        ) : (
-                          g.title
-                        )}
-                      </td>
-                      <td className="px-4 py-3 tabular-nums">{formatNumber(g.tickets)}</td>
-                      <td className="px-4 py-3 font-bold tabular-nums text-success">{formatPrice(g.revenue)}</td>
+                  {pkgRows.map((p) => (
+                    <tr key={p.id} className="border-t border-border">
+                      <td className="px-4 py-3 font-semibold">{p.name}</td>
+                      <td className="px-4 py-3 tabular-nums">{formatNumber(p.count)}</td>
+                      <td className="px-4 py-3 tabular-nums">{formatNumber(p.tickets)}</td>
+                      <td className="px-4 py-3 font-bold tabular-nums text-success">{formatPrice(p.revenue)}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
+            </div>
+          )}
+        </section>
+
+        {/* Most played (tickets spent) */}
+        <section>
+          <h2 className="mb-3 text-xl font-bold">الأكثر لعبًا (تذاكر مصروفة)</h2>
+          {topGames.length === 0 ? (
+            <div className="glass rounded-xl p-5 text-muted-foreground">لا يوجد لعب مدفوع بعد.</div>
+          ) : (
+            <div className="grid gap-2">
+              {topGames.map((g) => (
+                <div key={g.id} className="glass flex items-center justify-between gap-3 rounded-xl p-3">
+                  <span className="font-semibold">
+                    {g.slug ? (
+                      <Link href={`/games/${g.slug}`} className="hover:text-primary">{g.title}</Link>
+                    ) : (
+                      g.title
+                    )}
+                  </span>
+                  <span className="font-bold tabular-nums text-[#FFCE1F]">🎟️ {formatNumber(g.tickets)}</span>
+                </div>
+              ))}
             </div>
           )}
         </section>
@@ -139,7 +178,7 @@ export default async function SalesPage() {
                 return (
                   <div key={r.id} className="glass flex flex-wrap items-center justify-between gap-3 rounded-xl p-3">
                     <div>
-                      <strong className="block">{titleById.get(r.game_id) ?? 'لعبة'}</strong>
+                      <strong className="block">{pkgName.get(r.package_id ?? '') ?? 'باقة'}</strong>
                       <span className="text-xs text-muted-foreground">
                         {buyerName.get(r.user_id) ?? 'مستخدم'} •{' '}
                         <span dir="ltr">{new Date(r.created_at).toLocaleString('en-GB')}</span>

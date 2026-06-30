@@ -20,7 +20,7 @@ export interface EditorGame {
   difficulty: Difficulty;
   gameType: 'family_feud' | 'word_builder';
   status: string;
-  priceCents: number;
+  ticketCost: number;
 }
 
 const inputClass =
@@ -31,7 +31,7 @@ export function GameEditor({ game, initialRounds }: { game: EditorGame; initialR
   const [tagline, setTagline] = useState(game.tagline);
   const [description, setDescription] = useState(game.description);
   const [difficulty, setDifficulty] = useState<Difficulty>(game.difficulty);
-  const [priceRiyals, setPriceRiyals] = useState<number>(game.priceCents / 100);
+  const [ticketCost, setTicketCost] = useState<number>(game.ticketCost);
   const [rounds, setRounds] = useState<EditorRound[]>(initialRounds);
   const [status, setStatus] = useState(game.status);
   const [savedAt, setSavedAt] = useState<number | null>(null);
@@ -54,7 +54,7 @@ export function GameEditor({ game, initialRounds }: { game: EditorGame; initialR
   function save() {
     setError(null);
     startSave(async () => {
-      const res = await saveGame(game.id, { title, tagline, description, difficulty, priceCents: Math.round(priceRiyals * 100) }, rounds);
+      const res = await saveGame(game.id, { title, tagline, description, difficulty, ticketCost }, rounds);
       if (res.ok) setSavedAt(Date.now());
       else setError(res.error ?? 'تعذّر الحفظ');
     });
@@ -65,7 +65,7 @@ export function GameEditor({ game, initialRounds }: { game: EditorGame; initialR
     const next = status === 'published' ? 'draft' : 'published';
     startPublish(async () => {
       // Persist content first so a freshly-published game has its questions.
-      const saveRes = await saveGame(game.id, { title, tagline, description, difficulty, priceCents: Math.round(priceRiyals * 100) }, rounds);
+      const saveRes = await saveGame(game.id, { title, tagline, description, difficulty, ticketCost }, rounds);
       if (!saveRes.ok) {
         setError(saveRes.error ?? 'تعذّر الحفظ');
         return;
@@ -168,28 +168,28 @@ export function GameEditor({ game, initialRounds }: { game: EditorGame; initialR
           ))}
         </div>
 
-        {/* Pricing: 0 = free, otherwise players buy a ticket to play. */}
+        {/* Play cost in tickets: 0 = free, otherwise spends tickets from the wallet. */}
         <div className="rounded-xl border-2 border-border bg-background/40 p-4">
-          <label className="mb-1 block text-sm font-semibold">سعر التذكرة</label>
+          <label className="mb-1 block text-sm font-semibold">تكلفة اللعب (تذاكر)</label>
           <p className="mb-3 text-xs text-muted-foreground">
-            اتركه ٠ لجعل اللعبة مجانية، أو حدّد سعراً ليشتري اللاعب تذكرة قبل اللعب.
+            كم تذكرة يصرفها اللاعب لفتح جلسة لعب؟ اتركها ٠ لجعل اللعبة مجانية. (التذاكر تُشترى من المتجر)
           </p>
           <div className="flex items-center gap-2">
             <input
               type="number"
               min={0}
-              max={5000}
+              max={50}
               step={1}
-              value={priceRiyals}
+              value={ticketCost}
               onChange={(e) => {
-                setPriceRiyals(Math.max(0, Number(e.target.value) || 0));
+                setTicketCost(Math.max(0, Math.round(Number(e.target.value) || 0)));
                 setSavedAt(null);
               }}
               className="w-32 rounded-lg border-2 border-border bg-background/60 px-3 py-2 text-center outline-none focus:border-primary"
-              aria-label="سعر التذكرة بالريال"
+              aria-label="تكلفة اللعب بالتذاكر"
             />
-            <span className="text-sm text-muted-foreground">ريال سعودي</span>
-            {priceRiyals > 0 ? (
+            <span className="text-sm text-muted-foreground">تذكرة</span>
+            {ticketCost > 0 ? (
               <span className="ms-auto rounded-full bg-[#FFCE1F]/20 px-3 py-1 text-xs font-semibold text-[#FFCE1F]">
                 🎟️ مدفوعة
               </span>

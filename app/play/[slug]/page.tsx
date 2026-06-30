@@ -73,15 +73,20 @@ export default async function PlayPage({ params }: { params: Promise<{ slug: str
 
   const { data: game } = await supabase
     .from('games')
-    .select('id, slug, title, game_type, status, config, price_cents')
+    .select('id, slug, title, game_type, status, config, ticket_cost, creator_id')
     .eq('slug', slug)
     .maybeSingle();
   if (!game) notFound();
 
-  // Paid games require a ticket. Send unentitled players to the game page to buy.
-  if (game.price_cents > 0) {
-    const { data: hasTicket } = await supabase.rpc('user_has_ticket', { gid: game.id, uid: user.id });
-    if (!hasTicket) redirect(`/games/${slug}`);
+  // Paid games need an active play grant (created when a ticket is spent).
+  // Free games, the creator, and moderators play without one.
+  if (game.ticket_cost > 0 && game.creator_id !== user.id) {
+    const [{ data: active }, { data: profile }] = await Promise.all([
+      supabase.rpc('has_active_play', { gid: game.id, uid: user.id }),
+      supabase.from('profiles').select('role').eq('id', user.id).maybeSingle(),
+    ]);
+    const isPrivileged = profile?.role === 'admin' || profile?.role === 'moderator';
+    if (!active && !isPrivileged) redirect(`/games/${slug}`);
   }
 
   if (game.game_type === 'word_builder') {

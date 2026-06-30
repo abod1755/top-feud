@@ -58,11 +58,13 @@ Deno.serve(async (req: Request) => {
     .update({ status: captured ? 'paid' : 'failed' })
     .eq('provider_charge_id', chargeId);
 
-  if (captured && meta.user_id && meta.game_id) {
-    await supabase.rpc('grant_ticket', {
+  const tickets = Number(meta.tickets ?? 0);
+  if (captured && meta.user_id && tickets > 0) {
+    await supabase.rpc('grant_tickets', {
       p_user: meta.user_id,
-      p_game: meta.game_id,
+      p_count: tickets,
       p_payment: meta.payment_id ?? null,
+      p_package: meta.package_id ?? null,
     });
   }
 

@@ -5,19 +5,14 @@ import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 import { createTapCharge } from '@/lib/payments/tap';
 import { siteUrl } from '@/lib/env';
 
-type CheckoutResult =
-  | { ok: true; url: string }
-  | { ok: true; owned: true; slug: string }
-  | { ok: false; error: string };
+type CheckoutResult = { ok: true; url: string } | { ok: false; error: string };
 
 /**
- * Starts a Tap checkout for a paid game. Returns a hosted-payment URL the
- * client redirects to. If the game is free or the user already owns a ticket,
- * returns `owned` so the UI can send them straight to play. All trust lives on
- * the server: the price comes from the DB (never the client), and a ticket is
- * only minted later by the verified callback / webhook — never here.
+ * Starts a Tap checkout to buy a ticket PACKAGE. Tickets are credited to the
+ * player's wallet only after the charge is verified (callback / webhook) — never
+ * from the client. The price and ticket count come from the DB, not the client.
  */
-export async function startCheckout(gameId: string): Promise<CheckoutResult> {
+export async function startCheckout(packageId: string): Promise<CheckoutResult> {
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
@@ -26,27 +21,21 @@ export async function startCheckout(gameId: string): Promise<CheckoutResult> {
 
   const admin = createSupabaseAdminClient();
 
-  const { data: game } = await admin
-    .from('games')
-    .select('id, slug, title, price_cents, currency, status, visibility')
-    .eq('id', gameId)
+  const { data: pkg } = await admin
+    .from('ticket_packages')
+    .select('id, name, tickets, price_cents, currency, is_active')
+    .eq('id', packageId)
     .maybeSingle();
-  if (!game) return { ok: false, error: 'اللعبة غير موجودة.' };
+  if (!pkg || !pkg.is_active) return { ok: false, error: 'الباقة غير متاحة.' };
 
-  // Already entitled? (free game, owns a ticket, creator, or moderator.)
-  const { data: entitled } = await admin.rpc('user_has_ticket', { gid: game.id, uid: user.id });
-  if (entitled || game.price_cents <= 0) {
-    return { ok: true, owned: true, slug: game.slug };
-  }
-
-  // Record a pending payment first so we always have a row to reconcile against.
   const { data: payment, error: payErr } = await admin
     .from('payments')
     .insert({
       user_id: user.id,
-      game_id: game.id,
-      amount_cents: game.price_cents,
-      currency: game.currency,
+      package_id: pkg.id,
+      amount_cents: pkg.price_cents,
+      currency: pkg.currency,
+      tickets_granted: pkg.tickets,
       status: 'pending',
     })
     .select('id')
@@ -61,19 +50,21 @@ export async function startCheckout(gameId: string): Promise<CheckoutResult> {
 
   try {
     const charge = await createTapCharge({
-      amountCents: game.price_cents,
-      currency: game.currency,
-      description: `تذكرة لعبة: ${game.title}`,
+      amountCents: pkg.price_cents,
+      currency: pkg.currency,
+      description: `${pkg.name} — ${pkg.tickets} تذكرة`,
       customer: { name: profile?.display_name ?? 'لاعب', email: user.email ?? undefined },
-      redirectUrl: `${siteUrl}/play/${game.slug}/callback`,
+      redirectUrl: `${siteUrl}/checkout/callback`,
       webhookUrl: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/tap-webhook`,
-      metadata: { payment_id: payment.id, game_id: game.id, user_id: user.id },
+      metadata: {
+        payment_id: payment.id,
+        package_id: pkg.id,
+        user_id: user.id,
+        tickets: String(pkg.tickets),
+      },
     });
 
-    await admin
-      .from('payments')
-      .update({ provider_charge_id: charge.id })
-      .eq('id', payment.id);
+    await admin.from('payments').update({ provider_charge_id: charge.id }).eq('id', payment.id);
 
     const url = charge.transaction?.url;
     if (!url) return { ok: false, error: 'لم تُرجِع بوابة الدفع رابطاً.' };
