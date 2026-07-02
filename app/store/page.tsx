@@ -51,7 +51,7 @@ export default async function StorePage() {
             </span>
             <div>
               <h1 className="font-display text-3xl font-extrabold">المتجر</h1>
-              <p className="text-sm text-muted-foreground">اشترِ باقة تذاكر — كل لعبة تكلّف تذكرة. دفع آمن عبر Tap.</p>
+              <p className="text-sm text-muted-foreground">اشترِ باقة تذاكر — كل لعبة تكلّف تذكرة. دفع آمن عبر Moyasar (مدى وApple Pay).</p>
             </div>
           </div>
 

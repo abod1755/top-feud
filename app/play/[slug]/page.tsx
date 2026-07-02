@@ -5,6 +5,8 @@ import { PlayShell } from '@/components/play/play-shell';
 import type { PlayQuestion } from '@/components/play/solo-game';
 import type { PlayTopic } from '@/components/play/topic-game';
 import { WordGame, type WordRound } from '@/components/play/word-game';
+import { QuizGame, type McqPlayQuestion } from '@/components/play/quiz-game';
+import { HiveGame, type HivePlayCell } from '@/components/play/hive-game';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 
 export const metadata: Metadata = { title: 'العب' };
@@ -13,6 +15,20 @@ const DEFAULT_TIME = 60;
 
 interface WordConfig {
   rounds?: { letters?: string[]; duration_seconds?: number; min_word_length?: number }[];
+}
+
+interface McqConfig {
+  questions?: { prompt?: string; image_url?: string; options?: string[]; correct?: number; seconds?: number }[];
+}
+
+interface HiveConfig {
+  cells?: { letter?: string; question?: string; answer?: string }[];
+}
+
+function EmptyGame({ message }: { message: string }) {
+  return (
+    <div className="container grid min-h-[70vh] place-items-center text-center text-muted-foreground">{message}</div>
+  );
 }
 
 async function loadFeud(
@@ -94,16 +110,48 @@ export default async function PlayPage({ params }: { params: Promise<{ slug: str
     const wordRounds: WordRound[] = (cfg.rounds ?? [])
       .map((r) => ({ letters: r.letters ?? [], duration: r.duration_seconds ?? 90, minLen: r.min_word_length ?? 3 }))
       .filter((r) => r.letters.length > 0);
-    if (wordRounds.length === 0) {
-      return (
-        <div className="container grid min-h-[70vh] place-items-center text-center text-muted-foreground">
-          لم تُضبط أحرف هذه اللعبة بعد.
-        </div>
-      );
-    }
+    if (wordRounds.length === 0) return <EmptyGame message="لم تُضبط أحرف هذه اللعبة بعد." />;
     return (
       <main className="min-h-screen">
         <WordGame gameId={game.id} gameSlug={game.slug} gameTitle={game.title} rounds={wordRounds} />
+      </main>
+    );
+  }
+
+  if (game.game_type === 'quiz' || game.game_type === 'photo_guess') {
+    const cfg = (game.config ?? {}) as unknown as McqConfig;
+    const questions: McqPlayQuestion[] = (cfg.questions ?? [])
+      .map((q) => ({
+        prompt: q.prompt ?? '',
+        imageUrl: q.image_url || undefined,
+        options: (q.options ?? []).filter((o): o is string => !!o),
+        correct: q.correct ?? 0,
+        seconds: q.seconds ?? 15,
+      }))
+      .filter(
+        (q) =>
+          (q.prompt !== '' || q.imageUrl) && q.options.length >= 2 && q.correct >= 0 && q.correct < q.options.length,
+      );
+    if (questions.length === 0) return <EmptyGame message="لم تُضف أسئلة لهذه اللعبة بعد." />;
+    return (
+      <main className="min-h-screen">
+        <QuizGame gameId={game.id} gameSlug={game.slug} gameTitle={game.title} questions={questions} />
+      </main>
+    );
+  }
+
+  if (game.game_type === 'letter_hive') {
+    const cfg = (game.config ?? {}) as unknown as HiveConfig;
+    const cells: HivePlayCell[] = (cfg.cells ?? []).map((c) => ({
+      letter: c.letter ?? '',
+      question: c.question ?? '',
+      answer: c.answer ?? '',
+    }));
+    const ready = cells.length === 25 && cells.every((c) => c.letter && c.question && c.answer);
+    if (!ready) return <EmptyGame message="لم تكتمل خلايا هذه اللعبة بعد (تحتاج ٢٥ خلية بحرف وسؤال وإجابة)." />;
+    return (
+      <main className="min-h-screen">
+        <HiveGame gameId={game.id} gameSlug={game.slug} gameTitle={game.title} cells={cells} />
       </main>
     );
   }

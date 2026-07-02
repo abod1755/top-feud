@@ -11,6 +11,9 @@ export const BRAND = {
 export const GAME_TYPES = {
   family_feud: { label: 'فاميلي فيود', short: 'فيود', emoji: '👨‍👩‍👧‍👦' },
   word_builder: { label: 'سباق الحروف', short: 'حروف', emoji: '🔤' },
+  quiz: { label: 'كويز سريع', short: 'كويز', emoji: '⚡' },
+  photo_guess: { label: 'من صاحب الصورة', short: 'صورة', emoji: '📸' },
+  letter_hive: { label: 'خلية الحروف', short: 'خلية', emoji: '🐝' },
 } as const;
 
 export type GameTypeKey = keyof typeof GAME_TYPES;

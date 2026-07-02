@@ -1,36 +1,38 @@
 import { NextResponse } from 'next/server';
 
 import { createSupabaseAdminClient } from '@/lib/supabase/admin';
-import { retrieveTapCharge } from '@/lib/payments/tap';
+import { retrieveMoyasarPayment } from '@/lib/payments/moyasar';
 import { siteUrl } from '@/lib/env';
 
 export const dynamic = 'force-dynamic';
 
 /**
- * Tap returns the player here after paying for a ticket package (`?tap_id=`).
- * We verify the charge server-side, mark the payment, and credit the tickets to
- * the wallet via grant_tickets (idempotent). The tap-webhook handles the case
- * where the player never makes it back to this redirect.
+ * Moyasar returns the customer here after paying (`?id=<payment_id>&status=`).
+ * We verify the payment server-side (the only source of truth), mark our
+ * payment row, and credit the tickets via grant_tickets (idempotent). The
+ * moyasar-webhook handles the case where the customer never returns here.
  */
 export async function GET(request: Request) {
   const url = new URL(request.url);
-  const chargeId = url.searchParams.get('tap_id');
+  const paymentId = url.searchParams.get('id') ?? url.searchParams.get('payment_id');
   const storeUrl = `${siteUrl}/store`;
 
-  if (!chargeId) return NextResponse.redirect(`${storeUrl}?payment=missing`);
+  if (!paymentId) return NextResponse.redirect(`${storeUrl}?payment=missing`);
 
   try {
-    const charge = await retrieveTapCharge(chargeId);
-    const meta = charge.metadata ?? {};
+    const payment = await retrieveMoyasarPayment(paymentId);
+    const meta = payment.metadata ?? {};
     const admin = createSupabaseAdminClient();
 
-    const captured = charge.status === 'CAPTURED';
-    await admin
-      .from('payments')
-      .update({ status: captured ? 'paid' : 'failed' })
-      .eq('provider_charge_id', chargeId);
+    const paid = payment.status === 'paid';
+    if (meta.payment_id) {
+      await admin
+        .from('payments')
+        .update({ status: paid ? 'paid' : 'failed' })
+        .eq('id', meta.payment_id);
+    }
 
-    if (!captured) return NextResponse.redirect(`${storeUrl}?payment=failed`);
+    if (!paid) return NextResponse.redirect(`${storeUrl}?payment=failed`);
 
     const tickets = Number(meta.tickets ?? 0);
     if (meta.user_id && tickets > 0) {

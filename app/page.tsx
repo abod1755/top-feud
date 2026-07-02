@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Users, Type, Gamepad2, ArrowLeft, Rocket } from 'lucide-react';
+import { Users, Type, Gamepad2, ArrowLeft, Rocket, Zap, Image as ImageIcon, Hexagon } from 'lucide-react';
 
 import { Header } from '@/components/header';
 import { DoodleBackground } from '@/components/doodle-background';
@@ -21,14 +21,38 @@ const MODES = [
     desc: 'كوّن أكثر كلمات في وقت محدد',
     href: '/explore?type=word_builder',
     tint: '#FFCE1F',
-    badge: 'جديد',
+    badge: null,
     Icon: Type,
+  },
+  {
+    title: 'كويز سريع',
+    desc: 'اختيار من متعدد — الأسرع يكسب',
+    href: '/explore?type=quiz',
+    tint: 'hsl(176 76% 49%)',
+    badge: 'جديد',
+    Icon: Zap,
+  },
+  {
+    title: 'من صاحب الصورة',
+    desc: 'خمّنوا من في الصورة قبل الوقت',
+    href: '/explore?type=photo_guess',
+    tint: '#F43F9D',
+    badge: 'جديد',
+    Icon: ImageIcon,
+  },
+  {
+    title: 'خلية الحروف',
+    desc: 'فريقان يتسابقان لتوصيل الخلية',
+    href: '/explore?type=letter_hive',
+    tint: '#2FD573',
+    badge: 'جديد',
+    Icon: Hexagon,
   },
   {
     title: 'كل الألعاب',
     desc: 'تصفّح كل ألعاب لمّة',
     href: '/explore',
-    tint: '#F43F9D',
+    tint: '#FFCE1F',
     badge: null,
     Icon: Gamepad2,
   },

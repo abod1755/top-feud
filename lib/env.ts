@@ -16,6 +16,7 @@ const serverSchema = z.object({
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1).optional(),
   ADMIN_EMAIL: z.string().email().optional(),
   TAP_SECRET_KEY: z.string().min(1).optional(),
+  MOYASAR_SECRET_KEY: z.string().min(1).optional(),
   NEXT_PUBLIC_SITE_URL: z.string().url().default('http://localhost:3000'),
 });
 
@@ -28,14 +29,22 @@ const clientSchema = z.object({
 const isServer = typeof window === 'undefined';
 
 function parseEnv() {
-  const source = {
+  const rawSource = {
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
     SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
     ADMIN_EMAIL: process.env.ADMIN_EMAIL,
     TAP_SECRET_KEY: process.env.TAP_SECRET_KEY,
+    MOYASAR_SECRET_KEY: process.env.MOYASAR_SECRET_KEY,
   };
+
+  // Treat empty-string values as unset, so optional() vars and defaults behave
+  // correctly whether a var is missing or defined-but-blank (e.g. `KEY=` in an
+  // env file, or an empty value in the Vercel dashboard).
+  const source = Object.fromEntries(
+    Object.entries(rawSource).map(([key, value]) => [key, value === '' ? undefined : value]),
+  );
 
   const schema = isServer ? serverSchema : clientSchema;
   const parsed = schema.safeParse(source);

@@ -16,8 +16,7 @@ export const metadata: Metadata = {
 
 const TYPE_TABS = [
   { key: 'all', label: 'الكل' },
-  { key: 'family_feud', label: GAME_TYPES.family_feud.label },
-  { key: 'word_builder', label: GAME_TYPES.word_builder.label },
+  ...(Object.keys(GAME_TYPES) as GameTypeKey[]).map((key) => ({ key, label: GAME_TYPES[key].label })),
 ];
 
 const SORT_TABS: { key: GameSort; label: string }[] = [
@@ -27,7 +26,7 @@ const SORT_TABS: { key: GameSort; label: string }[] = [
 ];
 
 function isGameType(v: string | undefined): v is GameTypeKey {
-  return v === 'family_feud' || v === 'word_builder';
+  return v != null && v in GAME_TYPES;
 }
 
 export default async function ExplorePage({

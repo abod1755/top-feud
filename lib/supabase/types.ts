@@ -1030,7 +1030,7 @@ export interface Database {
       collaborator_role: 'viewer' | 'editor' | 'owner';
       difficulty: 'easy' | 'medium' | 'hard';
       game_status: 'draft' | 'in_review' | 'published' | 'unlisted' | 'rejected' | 'archived';
-      game_type: 'family_feud' | 'word_builder';
+      game_type: 'family_feud' | 'word_builder' | 'quiz' | 'photo_guess' | 'letter_hive';
       game_visibility: 'public' | 'unlisted' | 'private';
       gender: 'male' | 'female';
       media_kind: 'image' | 'audio' | 'video';

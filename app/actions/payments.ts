@@ -2,15 +2,16 @@
 
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { createSupabaseAdminClient } from '@/lib/supabase/admin';
-import { createTapCharge } from '@/lib/payments/tap';
+import { createMoyasarInvoice } from '@/lib/payments/moyasar';
 import { siteUrl } from '@/lib/env';
 
 type CheckoutResult = { ok: true; url: string } | { ok: false; error: string };
 
 /**
- * Starts a Tap checkout to buy a ticket PACKAGE. Tickets are credited to the
- * player's wallet only after the charge is verified (callback / webhook) — never
- * from the client. The price and ticket count come from the DB, not the client.
+ * Starts a Moyasar checkout to buy a ticket PACKAGE. Tickets are credited to
+ * the wallet only after the payment is verified (callback / webhook) — never
+ * from the client. Price and ticket count come from the DB. Amounts are in
+ * halalas, which is exactly how `price_cents` is stored.
  */
 export async function startCheckout(packageId: string): Promise<CheckoutResult> {
   const supabase = await createSupabaseServerClient();
@@ -33,6 +34,7 @@ export async function startCheckout(packageId: string): Promise<CheckoutResult> 
     .insert({
       user_id: user.id,
       package_id: pkg.id,
+      provider: 'moyasar',
       amount_cents: pkg.price_cents,
       currency: pkg.currency,
       tickets_granted: pkg.tickets,
@@ -42,20 +44,12 @@ export async function startCheckout(packageId: string): Promise<CheckoutResult> 
     .single();
   if (payErr || !payment) return { ok: false, error: 'تعذّر بدء عملية الدفع.' };
 
-  const { data: profile } = await admin
-    .from('profiles')
-    .select('display_name')
-    .eq('id', user.id)
-    .maybeSingle();
-
   try {
-    const charge = await createTapCharge({
-      amountCents: pkg.price_cents,
+    const invoice = await createMoyasarInvoice({
+      amountHalalas: pkg.price_cents,
       currency: pkg.currency,
       description: `${pkg.name} — ${pkg.tickets} تذكرة`,
-      customer: { name: profile?.display_name ?? 'لاعب', email: user.email ?? undefined },
-      redirectUrl: `${siteUrl}/checkout/callback`,
-      webhookUrl: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/tap-webhook`,
+      successUrl: `${siteUrl}/checkout/callback`,
       metadata: {
         payment_id: payment.id,
         package_id: pkg.id,
@@ -64,11 +58,8 @@ export async function startCheckout(packageId: string): Promise<CheckoutResult> 
       },
     });
 
-    await admin.from('payments').update({ provider_charge_id: charge.id }).eq('id', payment.id);
-
-    const url = charge.transaction?.url;
-    if (!url) return { ok: false, error: 'لم تُرجِع بوابة الدفع رابطاً.' };
-    return { ok: true, url };
+    await admin.from('payments').update({ provider_charge_id: invoice.id }).eq('id', payment.id);
+    return { ok: true, url: invoice.url };
   } catch (e) {
     await admin.from('payments').update({ status: 'failed' }).eq('id', payment.id);
     return { ok: false, error: e instanceof Error ? e.message : 'فشل الدفع.' };

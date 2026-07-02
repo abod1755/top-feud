@@ -3,7 +3,9 @@ import type { Metadata } from 'next';
 
 import { Header } from '@/components/header';
 import { GameEditor, type EditorGame } from '@/components/creator/game-editor';
-import type { EditorRound } from '@/app/actions/games';
+import { emptyMcqQuestion } from '@/components/creator/mcq-editor';
+import { emptyHiveCells, HIVE_CELLS } from '@/components/creator/hive-editor';
+import type { EditorRound, McqQuestion, HiveCell } from '@/app/actions/games';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 
 export const metadata: Metadata = { title: 'محرّر اللعبة' };
@@ -18,7 +20,7 @@ export default async function EditPage({ params }: { params: Promise<{ id: strin
 
   const { data: game } = await supabase
     .from('games')
-    .select('id, slug, title, tagline, description, difficulty, game_type, status, creator_id, ticket_cost')
+    .select('id, slug, title, tagline, description, difficulty, game_type, status, creator_id, ticket_cost, config')
     .eq('id', id)
     .maybeSingle();
 
@@ -54,6 +56,29 @@ export default async function EditPage({ params }: { params: Promise<{ id: strin
       })),
   }));
 
+  // Config-driven types keep their content in games.config.
+  const cfg = (game.config ?? {}) as {
+    questions?: { prompt?: string; image_url?: string; options?: string[]; correct?: number; seconds?: number }[];
+    cells?: { letter?: string; question?: string; answer?: string }[];
+  };
+  const isMcq = game.game_type === 'quiz' || game.game_type === 'photo_guess';
+
+  const initialMcq: McqQuestion[] | undefined = isMcq
+    ? (cfg.questions ?? []).map((q) => ({
+        prompt: q.prompt ?? '',
+        imageUrl: q.image_url ?? '',
+        options: [...(q.options ?? []), '', '', '', ''].slice(0, 4),
+        correct: q.correct ?? 0,
+        seconds: q.seconds ?? 15,
+      }))
+    : undefined;
+  if (initialMcq && initialMcq.length === 0) initialMcq.push(emptyMcqQuestion());
+
+  const initialHive: HiveCell[] | undefined =
+    game.game_type === 'letter_hive'
+      ? [...(cfg.cells ?? []).map((c) => ({ letter: c.letter ?? '', question: c.question ?? '', answer: c.answer ?? '' })), ...emptyHiveCells()].slice(0, HIVE_CELLS)
+      : undefined;
+
   const editorGame: EditorGame = {
     id: game.id,
     slug: game.slug,
@@ -69,7 +94,7 @@ export default async function EditPage({ params }: { params: Promise<{ id: strin
   return (
     <main>
       <Header />
-      <GameEditor game={editorGame} initialRounds={initialRounds} />
+      <GameEditor game={editorGame} initialRounds={initialRounds} initialMcq={initialMcq} initialHive={initialHive} />
     </main>
   );
 }

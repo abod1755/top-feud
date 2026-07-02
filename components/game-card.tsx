@@ -22,6 +22,9 @@ export interface GameCardData {
 const TYPE_GRADIENT: Record<GameTypeKey, string> = {
   family_feud: 'from-primary/30 to-secondary/20',
   word_builder: 'from-secondary/30 to-primary/20',
+  quiz: 'from-[#FFCE1F]/30 to-primary/20',
+  photo_guess: 'from-[#F43F9D]/30 to-secondary/20',
+  letter_hive: 'from-success/30 to-[#FFCE1F]/20',
 };
 
 export function GameCard({ game }: { game: GameCardData }) {

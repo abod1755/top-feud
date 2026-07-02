@@ -1,20 +1,30 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { Users, Type } from 'lucide-react';
+import { Users, Type, Zap, Image as ImageIcon, Hexagon } from 'lucide-react';
 
 import { createGame } from '@/app/actions/games';
 import { Button } from '@/components/ui/button';
-import { DIFFICULTY_LABELS } from '@/lib/brand';
+import { DIFFICULTY_LABELS, GAME_TYPES } from '@/lib/brand';
 import { cn } from '@/lib/utils';
 
-type GameType = 'family_feud' | 'word_builder';
+type GameType = 'family_feud' | 'word_builder' | 'quiz' | 'photo_guess' | 'letter_hive';
 type Difficulty = 'easy' | 'medium' | 'hard';
 
 const TYPES: { key: GameType; label: string; Icon: typeof Users }[] = [
-  { key: 'family_feud', label: 'فاميلي فيود', Icon: Users },
-  { key: 'word_builder', label: 'سباق الحروف', Icon: Type },
+  { key: 'family_feud', label: GAME_TYPES.family_feud.label, Icon: Users },
+  { key: 'word_builder', label: GAME_TYPES.word_builder.label, Icon: Type },
+  { key: 'quiz', label: GAME_TYPES.quiz.label, Icon: Zap },
+  { key: 'photo_guess', label: GAME_TYPES.photo_guess.label, Icon: ImageIcon },
+  { key: 'letter_hive', label: GAME_TYPES.letter_hive.label, Icon: Hexagon },
 ];
+
+const TYPE_HINTS: Partial<Record<GameType, string>> = {
+  word_builder: 'محرّر سباق الحروف قيد البناء — يمكنك إنشاؤها وضبط محتواها لاحقًا.',
+  quiz: 'أسئلة اختيار من متعدد بوقت محدد — الأسرع يكسب أكثر.',
+  photo_guess: 'ضع صورة وخيارات، وخمّن اللاعبون من صاحبها.',
+  letter_hive: 'خلية ٢٥ حرفًا: فريقان يتسابقان لتوصيل طرفَي الخلية.',
+};
 
 export function CreateGameForm() {
   const [title, setTitle] = useState('');
@@ -69,9 +79,7 @@ export function CreateGameForm() {
             </button>
           ))}
         </div>
-        {gameType === 'word_builder' && (
-          <p className="mt-2 text-xs text-muted-foreground">محرّر سباق الحروف قيد البناء — يمكنك إنشاؤها وضبط محتواها لاحقًا.</p>
-        )}
+        {TYPE_HINTS[gameType] && <p className="mt-2 text-xs text-muted-foreground">{TYPE_HINTS[gameType]}</p>}
       </div>
 
       <div>

@@ -4,9 +4,18 @@ import { useState, useTransition } from 'react';
 import Link from 'next/link';
 import { Plus, Trash2, Save, Eye, Globe, Lock } from 'lucide-react';
 
-import { saveGame, setGameStatus, type EditorRound } from '@/app/actions/games';
+import {
+  saveGame,
+  setGameStatus,
+  type EditorRound,
+  type EditorConfig,
+  type McqQuestion,
+  type HiveCell,
+} from '@/app/actions/games';
+import { McqEditor } from '@/components/creator/mcq-editor';
+import { HiveEditor } from '@/components/creator/hive-editor';
 import { Button } from '@/components/ui/button';
-import { DIFFICULTY_LABELS } from '@/lib/brand';
+import { DIFFICULTY_LABELS, type GameTypeKey } from '@/lib/brand';
 import { cn } from '@/lib/utils';
 
 type Difficulty = 'easy' | 'medium' | 'hard';
@@ -18,7 +27,7 @@ export interface EditorGame {
   tagline: string;
   description: string;
   difficulty: Difficulty;
-  gameType: 'family_feud' | 'word_builder';
+  gameType: GameTypeKey;
   status: string;
   ticketCost: number;
 }
@@ -26,13 +35,25 @@ export interface EditorGame {
 const inputClass =
   'w-full rounded-lg border-2 border-border bg-background/60 px-3 py-2 outline-none focus:border-primary';
 
-export function GameEditor({ game, initialRounds }: { game: EditorGame; initialRounds: EditorRound[] }) {
+export function GameEditor({
+  game,
+  initialRounds,
+  initialMcq,
+  initialHive,
+}: {
+  game: EditorGame;
+  initialRounds: EditorRound[];
+  initialMcq?: McqQuestion[];
+  initialHive?: HiveCell[];
+}) {
   const [title, setTitle] = useState(game.title);
   const [tagline, setTagline] = useState(game.tagline);
   const [description, setDescription] = useState(game.description);
   const [difficulty, setDifficulty] = useState<Difficulty>(game.difficulty);
   const [ticketCost, setTicketCost] = useState<number>(game.ticketCost);
   const [rounds, setRounds] = useState<EditorRound[]>(initialRounds);
+  const [mcq, setMcq] = useState<McqQuestion[]>(initialMcq ?? []);
+  const [hive, setHive] = useState<HiveCell[]>(initialHive ?? []);
   const [status, setStatus] = useState(game.status);
   const [savedAt, setSavedAt] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -40,7 +61,19 @@ export function GameEditor({ game, initialRounds }: { game: EditorGame; initialR
   const [publishing, startPublish] = useTransition();
 
   const isWord = game.gameType === 'word_builder';
-  const questionCount = rounds.reduce((sum, r) => sum + r.questions.length, 0);
+  const isMcq = game.gameType === 'quiz' || game.gameType === 'photo_guess';
+  const isHive = game.gameType === 'letter_hive';
+  const questionCount = isMcq
+    ? mcq.length
+    : isHive
+      ? hive.filter((c) => c.letter && c.question && c.answer).length
+      : rounds.reduce((sum, r) => sum + r.questions.length, 0);
+
+  function editorConfig(): EditorConfig | undefined {
+    if (isMcq) return { kind: 'mcq', questions: mcq };
+    if (isHive) return { kind: 'hive', cells: hive };
+    return undefined;
+  }
 
   function mutate(fn: (draft: EditorRound[]) => void) {
     setRounds((prev) => {
@@ -54,7 +87,7 @@ export function GameEditor({ game, initialRounds }: { game: EditorGame; initialR
   function save() {
     setError(null);
     startSave(async () => {
-      const res = await saveGame(game.id, { title, tagline, description, difficulty, ticketCost }, rounds);
+      const res = await saveGame(game.id, { title, tagline, description, difficulty, ticketCost }, rounds, editorConfig());
       if (res.ok) setSavedAt(Date.now());
       else setError(res.error ?? 'تعذّر الحفظ');
     });
@@ -65,7 +98,7 @@ export function GameEditor({ game, initialRounds }: { game: EditorGame; initialR
     const next = status === 'published' ? 'draft' : 'published';
     startPublish(async () => {
       // Persist content first so a freshly-published game has its questions.
-      const saveRes = await saveGame(game.id, { title, tagline, description, difficulty, ticketCost }, rounds);
+      const saveRes = await saveGame(game.id, { title, tagline, description, difficulty, ticketCost }, rounds, editorConfig());
       if (!saveRes.ok) {
         setError(saveRes.error ?? 'تعذّر الحفظ');
         return;
@@ -202,7 +235,24 @@ export function GameEditor({ game, initialRounds }: { game: EditorGame; initialR
         </div>
       </section>
 
-      {isWord ? (
+      {isMcq ? (
+        <McqEditor
+          questions={mcq}
+          onChange={(next) => {
+            setMcq(next);
+            setSavedAt(null);
+          }}
+          withImage={game.gameType === 'photo_guess'}
+        />
+      ) : isHive ? (
+        <HiveEditor
+          cells={hive}
+          onChange={(next) => {
+            setHive(next);
+            setSavedAt(null);
+          }}
+        />
+      ) : isWord ? (
         <div className="mt-6 glass rounded-2xl p-8 text-center text-muted-foreground">
           محرّر محتوى سباق الحروف قيد البناء. يمكنك حفظ بيانات اللعبة الآن.
         </div>
