@@ -21,7 +21,9 @@ const csp = [
   `script-src 'self' 'unsafe-inline' ${process.env.NODE_ENV === 'development' ? "'unsafe-eval'" : ''}`,
   `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com`,
   `font-src 'self' https://fonts.gstatic.com data:`,
-  `img-src 'self' data: blob: ${supabaseUrl} ${supabaseWildcard}`.trim(),
+  // Creators paste arbitrary image URLs into photo games ("من صاحب الصورة"),
+  // so images may come from any https host. Other directives stay strict.
+  `img-src 'self' data: blob: https:`,
   `media-src 'self' blob: ${supabaseUrl} ${supabaseWildcard}`.trim(),
   `connect-src 'self' ${supabaseUrl} ${supabaseWildcard} wss://${supabaseHost}`.trim(),
   `frame-ancestors 'none'`,
