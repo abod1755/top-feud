@@ -85,3 +85,72 @@ export function playFinish() {
   const t = ctx.currentTime;
   [523, 659, 784, 1046].forEach((f, i) => tone(ctx, f, t + i * 0.12, 0.22, 'triangle', 0.18));
 }
+
+/** Tone that glides between two frequencies (whooshes, buzzers, pops). */
+function sweep(
+  ctx: AudioContext,
+  from: number,
+  to: number,
+  startAt: number,
+  duration: number,
+  type: OscillatorType = 'sine',
+  peak = 0.15,
+) {
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(from, startAt);
+  osc.frequency.exponentialRampToValueAtTime(Math.max(to, 1), startAt + duration);
+  gain.gain.setValueAtTime(0.0001, startAt);
+  gain.gain.exponentialRampToValueAtTime(peak, startAt + 0.015);
+  gain.gain.exponentialRampToValueAtTime(0.0001, startAt + duration);
+  osc.connect(gain).connect(ctx.destination);
+  osc.start(startAt);
+  osc.stop(startAt + duration + 0.02);
+}
+
+/** Quiet clock tick for the last seconds of a countdown. */
+export function playTick() {
+  const ctx = getCtx();
+  if (!ctx) return;
+  tone(ctx, 1150, ctx.currentTime, 0.05, 'square', 0.06);
+}
+
+/** Falling "time's up" buzzer. */
+export function playTimeUp() {
+  const ctx = getCtx();
+  if (!ctx) return;
+  const t = ctx.currentTime;
+  sweep(ctx, 420, 110, t, 0.45, 'sawtooth', 0.14);
+  sweep(ctx, 210, 55, t, 0.45, 'square', 0.1);
+}
+
+/** Short rising pop — claiming a cell, picking an option. */
+export function playPop() {
+  const ctx = getCtx();
+  if (!ctx) return;
+  sweep(ctx, 320, 950, ctx.currentTime, 0.1, 'sine', 0.18);
+}
+
+/** Quick upward whoosh for flipping an answer on the board. */
+export function playReveal() {
+  const ctx = getCtx();
+  if (!ctx) return;
+  const t = ctx.currentTime;
+  sweep(ctx, 500, 1400, t, 0.14, 'triangle', 0.14);
+  tone(ctx, 1568, t + 0.12, 0.1, 'sine', 0.12); // G6 sparkle
+}
+
+/** Big victory fanfare — winner screens. Louder and longer than playFinish. */
+export function playVictory() {
+  const ctx = getCtx();
+  if (!ctx) return;
+  const t = ctx.currentTime;
+  // Rising fanfare…
+  [392, 523, 659, 784].forEach((f, i) => tone(ctx, f, t + i * 0.11, 0.2, 'triangle', 0.2));
+  // …into a held chord an octave up.
+  [523, 659, 784, 1046].forEach((f) => {
+    tone(ctx, f, t + 0.48, 0.7, 'triangle', 0.12);
+    tone(ctx, f * 2, t + 0.48, 0.5, 'sine', 0.05);
+  });
+}

@@ -7,7 +7,8 @@ import { Timer, RotateCcw, X, Volume2, VolumeX, Flame } from 'lucide-react';
 
 import { recordPlay, recordScore } from '@/app/actions/play';
 import { Button } from '@/components/ui/button';
-import { playCorrect, playWrong, playFinish } from '@/lib/sounds';
+import { Confetti } from '@/components/play/confetti';
+import { playCorrect, playWrong, playVictory, playTick, playTimeUp } from '@/lib/sounds';
 import { cn, formatNumber } from '@/lib/utils';
 
 /** One multiple-choice question. `imageUrl` makes it a photo question. */
@@ -57,7 +58,7 @@ export function QuizGame({ gameId, gameSlug, gameTitle, questions }: QuizGamePro
       setQIndex((prev) => {
         if (prev + 1 >= questions.length) {
           setPhase('finished');
-          if (!mutedRef.current) playFinish();
+          if (!mutedRef.current) playVictory();
           void recordPlay(gameId);
           void recordScore(gameId, scoreRef.current);
           return prev;
@@ -81,10 +82,11 @@ export function QuizGame({ gameId, gameSlug, gameTitle, questions }: QuizGamePro
     if (timeLeft <= 0) {
       setPhase('revealed');
       setStreak(0);
-      if (!mutedRef.current) playWrong();
+      if (!mutedRef.current) playTimeUp();
       goNext();
       return;
     }
+    if (timeLeft <= 5 && !mutedRef.current) playTick();
     const t = setTimeout(() => setTimeLeft((s) => s - 1), 1000);
     return () => clearTimeout(t);
   }, [phase, timeLeft, goNext]);
@@ -139,6 +141,7 @@ export function QuizGame({ gameId, gameSlug, gameTitle, questions }: QuizGamePro
   if (phase === 'finished') {
     return (
       <div className="container grid min-h-[70vh] place-items-center text-center">
+        <Confetti />
         <motion.div
           initial={{ scale: 0.85, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}

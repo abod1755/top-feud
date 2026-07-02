@@ -7,7 +7,8 @@ import { X, Maximize, Minimize, RotateCcw, Star, Check, ChevronLeft } from 'luci
 import { recordPlay } from '@/app/actions/play';
 import { Button } from '@/components/ui/button';
 import type { PlayQuestion } from '@/components/play/solo-game';
-import { playCorrect, playWrong, playFinish } from '@/lib/sounds';
+import { Confetti } from '@/components/play/confetti';
+import { playReveal, playWrong, playVictory } from '@/lib/sounds';
 import { cn, formatNumber } from '@/lib/utils';
 
 export interface PlayTopic {
@@ -55,7 +56,7 @@ export function TopicGame({ gameId, gameSlug, gameTitle, topics }: TopicGameProp
         copy[activeTeam] += question.answers[i].points;
         return copy;
       });
-      if (!mutedRef.current) playCorrect();
+      if (!mutedRef.current) playReveal();
     },
     [question, revealed, activeTeam],
   );
@@ -71,7 +72,7 @@ export function TopicGame({ gameId, gameSlug, gameTitle, topics }: TopicGameProp
       const next = new Set(prev).add(topicIndex);
       if (next.size >= topics.length) {
         setPhase('finished');
-        if (!mutedRef.current) playFinish();
+        if (!mutedRef.current) playVictory();
       } else {
         setActiveTeam((t) => (t === 0 ? 1 : 0));
         setPhase('grid');
@@ -174,6 +175,7 @@ export function TopicGame({ gameId, gameSlug, gameTitle, topics }: TopicGameProp
     const winner = scores[0] === scores[1] ? -1 : scores[0] > scores[1] ? 0 : 1;
     return (
       <div className="container grid min-h-[70vh] place-items-center text-center">
+        {winner !== -1 && <Confetti />}
         <div className="glass w-full max-w-md rounded-3xl p-10">
           <div className="text-6xl">{winner === -1 ? '🤝' : '🏆'}</div>
           <h2 className="mt-4 font-display text-3xl font-extrabold">{winner === -1 ? 'تعادل!' : `فاز ${names[winner]}`}</h2>

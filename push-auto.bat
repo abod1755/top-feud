@@ -5,7 +5,7 @@ echo ========================================
 echo   Top Feud - auto push to GitHub
 echo ========================================
 git add -A
-git commit -m "Allow https images in CSP (photo games)"
+git commit -m "Sounds & effects: tick, buzzer, victory fanfare, confetti"
 git push
 echo.
 echo Done. Vercel will deploy automatically.

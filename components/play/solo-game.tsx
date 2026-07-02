@@ -7,8 +7,9 @@ import { Heart, Timer, RotateCcw, ArrowLeft, Check, X, Volume2, VolumeX } from '
 
 import { recordPlay, recordScore } from '@/app/actions/play';
 import { Button } from '@/components/ui/button';
+import { Confetti } from '@/components/play/confetti';
 import { findAnswerIndex } from '@/lib/match';
-import { playCorrect, playWrong, playFinish } from '@/lib/sounds';
+import { playCorrect, playWrong, playVictory, playTick, playTimeUp } from '@/lib/sounds';
 import { cn, formatNumber } from '@/lib/utils';
 
 export interface PlayAnswer {
@@ -51,7 +52,9 @@ export function SoloGame({ gameId, gameSlug, gameTitle, questions }: SoloGamePro
   const sfx = {
     correct: () => !mutedRef.current && playCorrect(),
     wrong: () => !mutedRef.current && playWrong(),
-    finish: () => !mutedRef.current && playFinish(),
+    finish: () => !mutedRef.current && playVictory(),
+    tick: () => !mutedRef.current && playTick(),
+    timeUp: () => !mutedRef.current && playTimeUp(),
   };
 
   const question = questions[qIndex];
@@ -89,11 +92,14 @@ export function SoloGame({ gameId, gameSlug, gameTitle, questions }: SoloGamePro
   useEffect(() => {
     if (phase !== 'playing') return;
     if (timeLeft <= 0) {
+      sfx.timeUp();
       endQuestion();
       return;
     }
+    if (timeLeft <= 5) sfx.tick();
     const t = setTimeout(() => setTimeLeft((s) => s - 1), 1000);
     return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, timeLeft, endQuestion]);
 
   useEffect(() => () => void (betweenTimer.current && clearTimeout(betweenTimer.current)), []);
@@ -164,6 +170,7 @@ export function SoloGame({ gameId, gameSlug, gameTitle, questions }: SoloGamePro
   if (phase === 'finished') {
     return (
       <div className="container grid min-h-[70vh] place-items-center text-center">
+        <Confetti />
         <motion.div
           initial={{ scale: 0.85, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}

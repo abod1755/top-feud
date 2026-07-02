@@ -7,7 +7,8 @@ import { X, RotateCcw, Eye, Volume2, VolumeX } from 'lucide-react';
 
 import { recordPlay } from '@/app/actions/play';
 import { Button } from '@/components/ui/button';
-import { playCorrect, playWrong, playFinish } from '@/lib/sounds';
+import { Confetti } from '@/components/play/confetti';
+import { playPop, playWrong, playVictory } from '@/lib/sounds';
 import { cn } from '@/lib/utils';
 
 export interface HivePlayCell {
@@ -108,10 +109,10 @@ export function HiveGame({ gameId, gameSlug, gameTitle, cells }: HiveGameProps) 
       const next = [...claims];
       next[openCell] = team;
       setClaims(next);
-      if (!muted) playCorrect();
+      if (!muted) playPop();
       if (hasWon(next, team)) {
         setWinner(team);
-        if (!muted) playFinish();
+        if (!muted) playVictory();
         void recordPlay(gameId);
       }
     } else if (!muted) {
@@ -132,6 +133,7 @@ export function HiveGame({ gameId, gameSlug, gameTitle, cells }: HiveGameProps) 
     const info = TEAM_INFO[winner];
     return (
       <div className="container grid min-h-[70vh] place-items-center text-center">
+        <Confetti />
         <motion.div
           initial={{ scale: 0.85, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}

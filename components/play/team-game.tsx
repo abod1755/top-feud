@@ -7,8 +7,9 @@ import { Heart, Timer, RotateCcw, Check, X, Volume2, VolumeX } from 'lucide-reac
 
 import { recordPlay } from '@/app/actions/play';
 import { Button } from '@/components/ui/button';
+import { Confetti } from '@/components/play/confetti';
 import { findAnswerIndex } from '@/lib/match';
-import { playCorrect, playWrong, playFinish } from '@/lib/sounds';
+import { playCorrect, playWrong, playVictory, playTick, playTimeUp } from '@/lib/sounds';
 import { cn, formatNumber } from '@/lib/utils';
 import type { PlayQuestion } from '@/components/play/solo-game';
 
@@ -44,7 +45,9 @@ export function TeamGame({ gameId, gameSlug, gameTitle, questions }: TeamGamePro
   const sfx = {
     correct: () => !mutedRef.current && playCorrect(),
     wrong: () => !mutedRef.current && playWrong(),
-    finish: () => !mutedRef.current && playFinish(),
+    finish: () => !mutedRef.current && playVictory(),
+    tick: () => !mutedRef.current && playTick(),
+    timeUp: () => !mutedRef.current && playTimeUp(),
   };
 
   const question = questions[qIndex];
@@ -82,11 +85,14 @@ export function TeamGame({ gameId, gameSlug, gameTitle, questions }: TeamGamePro
   useEffect(() => {
     if (phase !== 'playing') return;
     if (timeLeft <= 0) {
+      sfx.timeUp();
       endTurn();
       return;
     }
+    if (timeLeft <= 5) sfx.tick();
     const t = setTimeout(() => setTimeLeft((s) => s - 1), 1000);
     return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, timeLeft, endTurn]);
 
   useEffect(() => () => void (betweenTimer.current && clearTimeout(betweenTimer.current)), []);
@@ -188,6 +194,7 @@ export function TeamGame({ gameId, gameSlug, gameTitle, questions }: TeamGamePro
     const winner = scores[0] === scores[1] ? -1 : scores[0] > scores[1] ? 0 : 1;
     return (
       <div className="container grid min-h-[70vh] place-items-center text-center">
+        {winner !== -1 && <Confetti />}
         <motion.div
           initial={{ scale: 0.85, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}

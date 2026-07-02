@@ -7,7 +7,7 @@ import { X, Maximize, Minimize, ChevronRight, ChevronLeft, RotateCcw } from 'luc
 import { recordPlay } from '@/app/actions/play';
 import { Button } from '@/components/ui/button';
 import type { PlayQuestion } from '@/components/play/solo-game';
-import { playCorrect, playWrong, playFinish } from '@/lib/sounds';
+import { playReveal, playWrong, playVictory } from '@/lib/sounds';
 import { cn, formatNumber } from '@/lib/utils';
 
 interface PresenterGameProps {
@@ -36,7 +36,7 @@ export function PresenterGame({ gameId, gameSlug, gameTitle, questions }: Presen
     (i: number) => {
       if (!question || i >= question.answers.length || revealed.has(i)) return;
       setRevealed((prev) => new Set(prev).add(i));
-      if (!mutedRef.current) playCorrect();
+      if (!mutedRef.current) playReveal();
     },
     [question, revealed],
   );
@@ -69,7 +69,7 @@ export function PresenterGame({ gameId, gameSlug, gameTitle, questions }: Presen
     setRevealed(new Set());
     setStrikes(0);
     if (qIndex + 1 >= questions.length) {
-      if (!mutedRef.current) playFinish();
+      if (!mutedRef.current) playVictory();
     } else {
       goto(1);
     }

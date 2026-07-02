@@ -9,7 +9,8 @@ import { recordPlay, recordScore } from '@/app/actions/play';
 import { Button } from '@/components/ui/button';
 import { ARABIC_WORDS } from '@/lib/arabic-words';
 import { normalizeArabic } from '@/lib/match';
-import { playCorrect, playWrong, playFinish } from '@/lib/sounds';
+import { Confetti } from '@/components/play/confetti';
+import { playCorrect, playWrong, playVictory, playTick } from '@/lib/sounds';
 import { cn, formatNumber } from '@/lib/utils';
 
 export interface WordRound {
@@ -65,7 +66,7 @@ export function WordGame({ gameId, gameSlug, gameTitle, rounds }: WordGameProps)
     setRoundIndex((prev) => {
       if (prev + 1 >= rounds.length) {
         setPhase('finished');
-        if (!mutedRef.current) playFinish();
+        if (!mutedRef.current) playVictory();
         void recordPlay(gameId);
         void recordScore(gameId, scoreRef.current);
         return prev;
@@ -91,6 +92,7 @@ export function WordGame({ gameId, gameSlug, gameTitle, rounds }: WordGameProps)
       nextRound();
       return;
     }
+    if (timeLeft <= 5 && !mutedRef.current) playTick();
     const t = setTimeout(() => setTimeLeft((s) => s - 1), 1000);
     return () => clearTimeout(t);
   }, [phase, timeLeft, nextRound]);
@@ -144,6 +146,7 @@ export function WordGame({ gameId, gameSlug, gameTitle, rounds }: WordGameProps)
   if (phase === 'finished') {
     return (
       <div className="container grid min-h-[70vh] place-items-center text-center">
+        <Confetti />
         <motion.div initial={{ scale: 0.85, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 200, damping: 16 }} className="glass w-full max-w-md rounded-3xl p-10">
           <div className="text-6xl">🏆</div>
           <h2 className="mt-4 font-display text-3xl font-extrabold">انتهى السباق!</h2>
